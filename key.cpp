@@ -62,4 +62,8 @@ namespace Bupstash {
 		// close file by leaving scope
 	}
 
+	const struct bupstash_primary_key& Key::getData() const {
+		return data;
+	}
+
 }

@@ -1,76 +1,18 @@
 #include <stdexcept>
 #include <cstring>
 #include <cstdint>
+#include <iostream>
 
+#include <cryptopp/cryptlib.h>
 #include <cryptopp/donna.h>
+#include <cryptopp/chacha.h>
+#include <cryptopp/chachapoly.h>
 
 #include "decryptioncontext.hpp"
 #include "zblake3.hpp"
 
 // https://libsodium.gitbook.io/doc/public-key_cryptography/authenticated_encryption
 // /usr/include/sodium/crypto_box_curve25519xchacha20poly1305.h
-
-		// crypto::DecryptionContext::new(k.metadata_sk, k.metadata_psk)
-		//struct bupstash_box_key ephemeral_bk = {}; // init to 0
-		// beforenm := shared key for multiple messages?
-		// TODO DECRYPT HERE
-/*
-        sodium::crypto_box_curve25519xchacha20poly1305_beforenm(
-            unmixed_key_bytes.as_mut_ptr(),
-            pk.bytes.as_ptr(),
-            sk.bytes.as_ptr(),
-        )
-*/
-/*
-pub const HASH_BYTES: usize = 32;
-
-pub const BOX_NONCEBYTES: usize = 24
-    sodium::crypto_box_curve25519xchacha20poly1305_NONCEBYTES as usize;
-pub const BOX_PUBLICKEYBYTES: usize = 32
-    sodium::crypto_box_curve25519xchacha20poly1305_PUBLICKEYBYTES as usize;
-pub const BOX_SECRETKEYBYTES: usize = 32
-    sodium::crypto_box_curve25519xchacha20poly1305_SECRETKEYBYTES as usize;
-pub const BOX_MACBYTES: usize = sodium::crypto_box_curve25519xchacha20poly1305_MACBYTES as usize; = 16
-
-pub const BOX_PRE_SHARED_KEY_BYTES: usize = 32;
-
-pub const RANDOM_SEED_BYTES: usize = 32;
-impl DecryptionContext {
-    pub fn decrypt_data(&mut self, ct: Vec<u8>) -> Result<Vec<u8>, anyhow::Error> {
-	// ...
-
-        if !box_decrypt(
-            &mut pt,
-            &ct[..ct.len() - BOX_PUBLICKEYBYTES],
-            &self.ephemeral_bk,
-        ) {
-            anyhow::bail!("data corrupt");
-        }
-
-        compression::decompress(pt)
-    }
-}
-#[inline(always)]
-pub fn box_compute_key(pk: &BoxPublicKey, sk: &BoxSecretKey, psk: &BoxPreSharedKey) -> BoxKey {
-    let mut unmixed_key_bytes = [0; BOX_BEFORENMBYTES];
-    if unsafe {
-        sodium::crypto_box_curve25519xchacha20poly1305_beforenm(
-            unmixed_key_bytes.as_mut_ptr(),
-            pk.bytes.as_ptr(),
-            sk.bytes.as_ptr(),
-        )
-    } == 0
-    {
-        BoxKey {
-            bytes: blake3::keyed_hash(&psk.bytes, &unmixed_key_bytes[..]).into(),
-        }
-    } else {
-        BoxKey {
-            bytes: [0; BOX_BEFORENMBYTES],
-        }
-    }
-}
-*/
 
 namespace Bupstash {
 
@@ -96,11 +38,15 @@ namespace Bupstash {
 					BUPSTASH_BOX_PUBLICKEYBYTES) != 0) {
 			memcpy(&ephemeralPK, pkSlice,
 						BUPSTASH_BOX_PUBLICKEYBYTES);
+			std::cout << "boxComputeKey() -- BEGIN" << std::endl;
 			boxComputeKey();
+			std::cout << "boxComputeKey() -- END" << std::endl;
 		}
 
+		std::cout << "boxDecrypt() -- BEGIN" << std::endl;
 		boxDecrypt(out, ciphertext, ciphertextLength -
 						BUPSTASH_BOX_PUBLICKEYBYTES);
+		std::cout << "boxDecrypt() -- END" << std::endl;
 
 		// TODO COMPRESSION::DECOMPRESS (compression.rs)!
 	}
@@ -122,34 +68,20 @@ namespace Bupstash {
 	void DecryptionContext::box_curve25519xchacha20poly1305_beforenm(
 						uint8_t* unmixedKeyBytes)
 	{
-		uint8_t s[32];
+		const static uint8_t ZERO[16] = { 0 };
+
+		uint8_t s[32]; // do not change to pointer to make sizeof work!
 		if(CryptoPP::Donna::curve25519_mult(s, paramSK,
 						 ephemeralPK.bytes) != 0)
 			throw std::runtime_error(
 				"Curve25519_mult failed. Invalid signature?");
 
-		// TODO NOW crypto_core_hchacha20(k, zero, s, NULL)
-		// https://github.com/jedisct1/libsodium/blob/master/src/libsodium/crypto_core/hchacha20/core_hchacha20.c
-		// COMPARE
-		// https://sources.debian.org/src/libcrypto++/8.4.0-1/chacha.cpp/
-		// IT MIGHT BE WE DO NOT WANT TO PRECOMPUTE THIS HACHACHA AS IT MIGHT RATHER BE PART OF THE ALGORITHM ALREADY AND UNLIKW WITH LIBSODIUM ONE CANNOT RE-USE A PRECOMPUTED VALUE HERE?
-/*
-
-int
-crypto_box_curve25519xchacha20poly1305_beforenm(unsigned char *k,
-                                                const unsigned char *pk,
-                                                const unsigned char *sk)
-{
-    static const unsigned char zero[16] = { 0 };
-    unsigned char s[32];
-
-    if (crypto_scalarmult_curve25519(s, sk, pk) != 0) {
-        return -1;
-    }
-    return crypto_core_hchacha20(k, zero, s, NULL);
-}
-
-*/
+		// crypto_core_hchacha(k, zero, s, NULL);
+		//                    out  in  key init-parameters
+		// TODO CSTAT SUBSTAT GETTING ERROR "THIS OBJECT REQUIRES AN IV" -- WOULD NEED TO CHECK IF AN IV = 0 IS A SUITABLE CHOICE TO ACHIVE THE SAME RESULTS AS THE LOW LEVEL crypto_core_hchacha routine?
+		CryptoPP::ChaCha::Decryption hchacha;
+		hchacha.SetKeyWithIV(s, sizeof(s), ZERO, 8); // TODO CSTAT GUESSED!
+		hchacha.ProcessData(unmixedKeyBytes, ZERO, sizeof(ZERO));
 	}
 
 	// https://sources.debian.org/src/libsodium/1.0.18-1/src/libsodium/crypto_box/curve25519xchacha20poly1305/box_curve25519xchacha20poly1305.c/
@@ -185,7 +117,19 @@ crypto_box_curve25519xchacha20poly1305_beforenm(unsigned char *k,
 		uint8_t* out, const uint8_t* ct, const uint8_t* mac,
 		const std::size_t ctl, const uint8_t* nonce)
 	{
-		// bk = member ephemeralBK
-		// TODO TRANSLATE FROM C / see link
+		// byte *message, const byte *mac, size_t macSize, const byte *iv, int ivLength, const byte *aad, size_t aadLength, const byte *ciphertext, size_t ciphertextLength
+		// TODO SMALL PROBLEM: IT MIGHT BE THAT THE DecryptAndVerify routine here differs in how it is implemented in Sodium. This will lead to a decryption failure? / NEED TO CHECK THE INPUT VALUES WRT. BUPSTASH'S IMPLEMENTATION?
+		CryptoPP::XChaCha20Poly1305::Decryption decryptCtx;
+		// TODO z IS IV = NONCE?
+		decryptCtx.SetKeyWithIV(ephemeralBK.bytes,
+					sizeof(ephemeralBK.bytes),
+					nonce, BUPSTASH_BOX_NONCEBYTES);
+		// TODO CSTAT BROKEN?
+		if(!decryptCtx.DecryptAndVerify(out, mac, BUPSTASH_BOX_MACBYTES,
+					nonce, BUPSTASH_BOX_NONCEBYTES,
+					NULL, 0, ct, ctl))
+			throw std::runtime_error("AEAD Decryption failed. "
+					"This might indicate the data has "
+					"been tampered with.");
 	}
 }

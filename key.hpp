@@ -9,6 +9,7 @@ namespace Bupstash {
 	class Key {
 	public:
 		Key(const std::string& path);
+		const struct bupstash_primary_key& getData() const;
 	private:
 		struct bupstash_primary_key data;
 		void readFile(const std::string& path,

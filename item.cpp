@@ -2,6 +2,7 @@
 #include <fstream>
 
 #include "item.hpp"
+#include "decryptioncontext.hpp"
 
 namespace Bupstash {
 
@@ -37,6 +38,25 @@ namespace Bupstash {
 							sizeof(uint8_t));
 		if(metaPlain.optional_is_index_tree_present)
 			readHtreeMetadata(metaPlain.index_tree, in);
+
+		// TODO CSTAT DECRYPT REMAINDER HERE?
+		// assume Vec<u8> is to be interpreted as "data"
+		// this means: serde uint for length followed by the actual
+		//             data contents.
+		uint64_t boxedCiphertextLength;
+		readSerde(boxedCiphertextLength, in);
+		uint8_t ciphertextBuffer[boxedCiphertextLength];
+		DecryptionContext decryptCtx(key.getData().data_sk,
+						key.getData().data_psk);
+		std::size_t boxedPlaintextLength =
+			decryptCtx.getPlaintextLength(boxedCiphertextLength);
+		uint8_t plaintextBuffer[boxedPlaintextLength];
+		decryptCtx.decrypt(plaintextBuffer, ciphertextBuffer,
+							boxedCiphertextLength);
+
+		// TODO WOULD CONTINUE HERE TO INTERPRET THE DATA AFTER
+		//      DECROMPRESSION HAS BEEN IMPLEMENTED IN DecryptCtx.
+		std::cout << "Decryption successful.\n" << std::endl;
 	}
 
 	void Item::readHtreeMetadata(struct bupstash_htree_metadata& htree,
