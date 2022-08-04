@@ -3,6 +3,19 @@
 
 <property name="masysma.target" value="maxbupst"/> 
 
+<!-- overrides the default build command -->
+<target name="masysma_internal_build_ada">
+	<exec executable="gnatmake" failonerror="true">
+		<arg value="-Wall"/>
+		<arg value="-aIlibsodium-ada/Binding_Sodium"/>
+		<arg value="-o"/>
+		<arg value="${masysma.target}"/>
+		<arg value="${masysma.target}.adb"/>
+		<arg value="-largs"/>
+		<arg value="-lsodium"/>
+	</exec>
+</target>
+
 <!-- CONSTANT TPL IMPORT -->
 <property environment="env"/>
 <condition property="masysma.internal.includepath.rel" value="${env.MDVL_CI_PHOENIX_ROOT}" else="/data/main/120_mdvl_rr"><isset property="env.MDVL_CI_PHOENIX_ROOT"/></condition>
