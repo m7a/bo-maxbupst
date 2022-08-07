@@ -9,6 +9,7 @@ package body MaXBupst_OO is
 
 	procedure Main is
 	begin
+		Ada.Text_IO.Put_Line("HELLO"); Ada.Text_IO.Flush;
 		if Argument_Count < 1 then
 			Help;
 			Set_Exit_Status(Failure);
@@ -17,6 +18,7 @@ package body MaXBupst_OO is
 				Argument(1) = "-?" then
 			Help;
 		elsif Argument(1) = "-l" or Argument(1) = "list" then
+			Ada.Text_IO.Put_Line("HELLO LIST"); Ada.Text_IO.Flush;
 			Parse_And_Run(Action_List);
 		elsif (Argument(1) = "-g" or Argument(1) = "get")
 					and not (Argument_Count < 2) then
@@ -68,7 +70,8 @@ package body MaXBupst_OO is
 			Has_Next_Arg: constant Boolean := I < AC;
 			No_More_Args: constant Boolean := I > AC;
 		begin
-			if Has_Next_Arg and Argument(I)'Length = 2 then
+			Ada.TExt_IO.Put_Line("DEBUG ARG " & Integer'Image(I) & " hasnext=" & Boolean'Image(Has_Next_Arg) & ", nomore=" & Boolean'Image(No_More_Args));
+			if Has_Next_Arg and then Argument(I)'Length = 2 then
 				case Argument(I)(2) is
 				when 'k' => Parse_And_Run_Recursive(I + 2,
 						Argument(I + 1),
@@ -95,6 +98,7 @@ package body MaXBupst_OO is
 				end if;
 				case Action is
 				when Action_List =>
+					Ada.Text_IO.Put_Line("HELLO RUN LIST"); Ada.Text_IO.Flush;
 					Run_List(Key_File, Repo_Directory);
 				when Action_Get =>
 					if Selected_ID = Parameter_Not_Set then
