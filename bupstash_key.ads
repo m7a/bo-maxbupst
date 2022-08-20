@@ -1,4 +1,5 @@
 with Ada.Streams;
+with Bupstash_Types;
 
 package Bupstash_Key is
 
@@ -57,7 +58,6 @@ private
 	-- ~~~
 
 	-- all lengths in bytes
-	Raw_ID_Length:             constant Integer := 16;
 	Partial_Hash_Key_Length:   constant Integer := 32;
 	Random_Seed_Bytes:         constant Integer := 32;
 	-- crypto_box_curve25519xchacha20poly1305_PUBLICKEYBYTES not def in .ads
@@ -67,7 +67,7 @@ private
 
 	-- TODO THIS IS ACTUALLY THE RAW KEY TYPE NOT THE ONE WE WOULD LIKE TO ULTIMATELY RETURN. CONVERT THEM TO THE RESPECTIVE NA-CL KEYS AS NEEDED.
 	type Key is tagged limited record
-		ID:                   String(1 .. Raw_ID_Length);
+		ID:                   Bupstash_Types.XID;
 		Rollsum_Key:          String(1 .. Random_Seed_Bytes);
 		Data_Hash_Key_Part_1: String(1 .. Partial_Hash_Key_Length);
 		Data_Hash_Key_Part_2: String(1 .. Partial_Hash_Key_Length);

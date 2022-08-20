@@ -1,6 +1,13 @@
+with Ada.Assertions;
 with Ada.Text_IO;
+
+with Sodium.Functions;
+
 with ZBase64;
 with Serde;
+
+with Bupstash_Types;
+use  Bupstash_Types;
 
 package body Bupstash_Key is
 
@@ -12,11 +19,11 @@ package body Bupstash_Key is
 		procedure Parse_Base64_PEM is
 			Base_64: String(1 .. Max_String_Length);
 			Length: Integer := 0;
+			Enable: Boolean := False;
 
 			procedure Process_Line is
 				Line: constant String :=
 						Ada.Text_IO.Get_Line(FD);
-				Enable: Boolean := False;
 			begin
 				if Line'Length = 0 or else Line(Line'First) = '#'
 									then
@@ -40,11 +47,9 @@ package body Bupstash_Key is
 		exception
 		-- this is the regular case, all other exceptions are propagated
 		when Ada.Text_IO.End_Error =>
-			ZBase64.Decode(Base_64, Raw_Data, Raw_Length);
+			ZBase64.Decode(Base_64(1 .. Length), Raw_Data, Raw_Length);
 		end Parse_Base64_PEM;
 	begin
-		Ada.Text_IO.Put_Line("PASS0");
-
 		Ada.Text_IO.Open(FD, Ada.Text_IO.In_File, Key_File);
 		begin
 			Parse_Base64_PEM;
@@ -55,8 +60,6 @@ package body Bupstash_Key is
 		end;
 		Ada.Text_IO.Close(FD);
 
-		Ada.Text_IO.Put_Line("PASS1");
-
 		declare
 			type Local_Ptr is
 				access all Ada.Streams.Stream_Element_Array;
@@ -66,9 +69,15 @@ package body Bupstash_Key is
 			Relevant_Data: aliased Ada.Streams.Stream_Element_Array
 						:= Raw_Data(1 .. Raw_Length);
 			S: Serde_Ctx := Init(Relevant_Data'Access);
+
+			Key_Type: U8;
 		begin
+			Key_Type := S.Next_U8;
+			Ada.Assertions.Assert(Key_Type = 0, "Wrong key type: " &
+				U8'Image(Key_Type) & ". Expected key type 0");
 			return (
-				ID => S.Next_Binary_String(Raw_ID_Length),
+				ID => Bupstash_Types.XID(S.Next_Binary_String(
+						Bupstash_Types.Raw_ID_Length)),
 				Rollsum_Key => S.Next_Binary_String(
 						Random_Seed_Bytes),
 				Data_Hash_Key_Part_1 => S.Next_Binary_String(
@@ -103,7 +112,8 @@ package body Bupstash_Key is
 
 	procedure Print(K: in Key) is
 	begin
-		Ada.Text_IO.Put_Line(K.ID);
+		Ada.Text_IO.Put_Line("Key ID: " &
+				Sodium.Functions.As_Hexidecimal(String(K.ID)));
 	end Print;
 
 end Bupstash_Key;
