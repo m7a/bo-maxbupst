@@ -7,12 +7,14 @@
 <target name="masysma_internal_build_ada">
 	<exec executable="gnatmake" failonerror="true">
 		<arg value="-Wall"/>
-		<arg value="-aIlibsodium-ada/Binding_Sodium"/>
-		<arg value="-aI/usr/share/ada/adainclude/blake3"/>
-		<arg value="-aI/usr/share/ada/adainclude/lz4"/>
 		<arg value="-o"/>
 		<arg value="${masysma.target}"/>
 		<arg value="${masysma.target}.adb"/>
+		<arg value="-aIlibsodium-ada/Binding_Sodium"/>
+		<arg value="-aI/usr/share/ada/adainclude/blake3"/>
+		<arg value="-aO/usr/lib/x86_64-linux-gnu/ada/adalib/blake3"/>
+		<arg value="-aI/usr/share/ada/adainclude/lz4"/>
+		<arg value="-aO/usr/lib/x86_64-linux-gnu/ada/adalib/lz4"/>
 		<arg value="-largs"/>
 		<arg value="-lsodium"/>
 		<arg value="-lblake3"/>

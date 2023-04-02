@@ -5,7 +5,9 @@ package Bupstash_Key is
 
 	type Key is tagged limited private;
 
-	function Init(Key_File: in String) return Key;
+	function Init(Key_File: in String)   return Key;
+	function Get_Metadata_SK (K: in Key) return Bupstash_Types.SK;
+	function Get_Metadata_PSK(K: in Key) return Bupstash_Types.PSK;
 
 	procedure Print(K: in Key);
 
@@ -79,5 +81,10 @@ private
 		Metadata_SK:          Bupstash_Types.SK;
 		Metadata_PSK:         Bupstash_Types.PSK;
 	end record;
+
+	function Get_Metadata_SK(K: in Key) return Bupstash_Types.SK is
+		(K.Metadata_SK);
+	function Get_Metadata_PSK(K: in Key) return Bupstash_Types.PSK is
+		(K.Metadata_PSK);
 
 end Bupstash_Key;

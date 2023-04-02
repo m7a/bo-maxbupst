@@ -1,4 +1,5 @@
 with Ada.Streams;
+use  Ada.Streams;
 with Bupstash_Key;
 with Bupstash_Types;
 
@@ -53,7 +54,9 @@ private
 	--     pub index_size: serde_bare::Uint,
 	-- }
 	type V3_Secret_Item_Metadata is limited record
-		Final: Boolean; -- TODO z DEBUG ONLY
+		Plain_Text_Hash: Bupstash_Types.Hash;
+		Send_Key_ID:     Bupstash_Types.XID;
+		Final:           Boolean; -- TODO z DEBUG ONLY
 	end record;
 
 	type Item is tagged limited record
@@ -67,9 +70,9 @@ private
 			Offset: out Ada.Streams.Stream_Element_Offset;
 			Ret: out V3_Plain_Text_Item_Metadata);
 
-	procedure Decrypt_Secret_Item_Metadata(
-			Raw: in Ada.Streams.Stream_Element_Array;
-			Ret: out V3_Secret_Item_Metadata);
+	procedure Decrypt_Secret_Item_Metadata(Key: in Bupstash_Key.Key;
+					Raw: in Stream_Element_Array;
+					Ret: out V3_Secret_Item_Metadata);
 
 	procedure Print(Ctx: in H_Tree_Metadata);
 

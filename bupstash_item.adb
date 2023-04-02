@@ -1,5 +1,3 @@
-with Ada.Streams;
-use  Ada.Streams;
 with Ada.Streams.Stream_IO;
 use  Ada.Streams.Stream_IO;
 with Ada.Text_IO;
@@ -11,6 +9,7 @@ with Sodium.Functions;
 with Serde;
 with Bupstash_Types;
 use  Bupstash_Types;
+with Bupstash_Crypto;
 
 -- {
 --   "id": "b52cb4e46ccbb1ff0fbb5eccb340c852",
@@ -106,12 +105,14 @@ package body Bupstash_Item is
 							Get_Remaining_Data;
 			begin
 				Close(FD);
-				Decrypt_Secret_Item_Metadata(Remain,
+				Decrypt_Secret_Item_Metadata(Key, Remain,
 							Ret.Decrypted);
 			end;
 		exception
 		when others =>
-			Close(FD);
+			if Is_Open(FD) then
+				Close(FD);
+			end if;
 			raise;
 		end return;
 	end Init;
@@ -160,35 +161,23 @@ package body Bupstash_Item is
 		Offset           := S.Get_Offset;
 	end Decode_Plain_Text_Item_Metadata;
 
-	procedure Decrypt_Secret_Item_Metadata(Raw: in Stream_Element_Array;
+	procedure Decrypt_Secret_Item_Metadata(Key: in Bupstash_Key.Key;
+					Raw: in Stream_Element_Array;
 					Ret: out V3_Secret_Item_Metadata) is
+		Crypto: Bupstash_Crypto.Decryption_Context :=
+			Bupstash_Crypto.New_Decryption_Context(
+				Key.Get_Metadata_SK, Key.Get_Metadata_PSK);
+		PT: aliased Stream_Element_Array := Crypto.Decrypt_Data(Raw);
+		type Local_Ptr is access all Stream_Element_Array;
+		package Ser is new Serde(Local_Ptr);
+		use Ser;
+		S: Serde_Ctx := Init(PT'Access);
 	begin
-		-- DecryptionContext decryptCtx(key.getData().data_sk,
-		-- 				key.getData().data_psk);
-		-- std::size_t boxedPlaintextLength =
-		-- 	decryptCtx.getPlaintextLength(boxedCiphertextLength);
-		-- uint8_t plaintextBuffer[boxedPlaintextLength];
-
-		-- pub fn box_decrypt(pt: &mut [u8], bt: &[u8], bk: &BoxKey) -> bool {
-		--     if bt.len() < BOX_NONCEBYTES + BOX_MACBYTES {
-		--         return false;
-		--     }
-		--     if pt.len() != bt.len() - BOX_NONCEBYTES - BOX_MACBYTES {
-		--         return false;
-		--     }
-		--     let nonce = &bt[..BOX_NONCEBYTES];
-		--     let ct = &bt[BOX_NONCEBYTES..];
-		--     if unsafe {
-		--         sodium::crypto_box_curve25519xchacha20poly1305_open_easy_afternm(
-		--             pt.as_mut_ptr(),
-		--             ct.as_ptr(),
-		--             ct.len().try_into().unwrap(),
-		--             nonce.as_ptr(),
-		--             bk.bytes.as_ptr(),
-		--         )
-
-		-- TODO CSTAT CONTINUE HERE -> crypto.adb. Key can be passed as needed...
-		-- Will need a blake 3 implementation in Ada.
+		Ret.Plain_Text_Hash := S.Next_Binary_String(
+						Ret.Plain_Text_Hash'Length);
+		Ret.Send_Key_ID := XID(S.Next_Binary_String(Raw_ID_Length));
+		--Ret.Index_Hash_Key_Part_2: 
+		-- TODO CSTAT CONTINUE DECODE PLAINTEXT HERE NOW
 		Ret.Final := False;
 	end Decrypt_Secret_Item_Metadata;
 
@@ -197,7 +186,7 @@ package body Bupstash_Item is
 	begin
 		Put_Line("-- Plain Text Metadata --");
 		Put_Line("Primary Key ID = " & Sodium.Functions.As_Hexidecimal(
-					String(Ctx.Plain.Primary_Key_ID)));
+						Ctx.Plain.Primary_Key_ID));
 		Put_Line("Timestamp (millis) = " &
 			U64'Image(Ctx.Plain.Unix_Timestamp_Millis));
 		Put_Line("-- Data Tree --");
@@ -208,6 +197,11 @@ package body Bupstash_Item is
 		else
 			Put_Line("-- No Index Tree present --");
 		end if;
+		Put_Line("-- Decrypted -- ");
+		Put_Line("Plain Text Hash = " & Sodium.Functions.As_Hexidecimal(
+						Ctx.Decrypted.Plain_Text_Hash));
+		Put_Line("Send Key ID = " & Sodium.Functions.As_Hexidecimal(
+						Ctx.Decrypted.Send_Key_ID));
 		Put_Line("-- END --");
 	end Print;
 

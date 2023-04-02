@@ -16,6 +16,8 @@ package Bupstash_Types is
 	Box_Pre_Shared_Key_Length: constant Integer := 32;
 	Box_Beforenmbytes:         constant Integer := 32;
 
+	Hash_Bytes:     constant Integer := 32; -- src/crypto.rs:
+
 	Box_Noncebytes: constant Integer := Integer(
 				Sodium.Thin_Binding.crypto_box_NONCEBYTES);
 	Box_Macbytes:   constant Integer := Integer(
@@ -25,6 +27,7 @@ package Bupstash_Types is
 	subtype SK      is String(1 .. Box_Secretkeybytes);
 	subtype PSK     is String(1 .. Box_Pre_Shared_Key_Length);
 	subtype Box_Key is String(1 .. Box_Beforenmbytes);
+	subtype Hash    is String(1 .. Hash_Bytes);
 
 	type U8 is mod 256;
 
