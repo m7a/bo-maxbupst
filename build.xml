@@ -8,11 +8,13 @@
 	<exec executable="gnatmake" failonerror="true">
 		<arg value="-Wall"/>
 		<arg value="-aIlibsodium-ada/Binding_Sodium"/>
+		<arg value="-aI/usr/share/ada/adainclude/blake3"/>
 		<arg value="-o"/>
 		<arg value="${masysma.target}"/>
 		<arg value="${masysma.target}.adb"/>
 		<arg value="-largs"/>
 		<arg value="-lsodium"/>
+		<arg value="-lblake3"/>
 	</exec>
 </target>
 

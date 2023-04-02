@@ -1,12 +1,28 @@
 with Interfaces;
 
+with Sodium.Thin_Binding;
+
 package Bupstash_Types is
 	
-	Raw_ID_Length:  constant Integer := 16;
-	Address_Length: constant Integer := 32;
+	Raw_ID_Length:             constant Integer := 16;
+	Address_Length:            constant Integer := 32;
 
-	type XID     is new String(1 .. Raw_ID_Length);  -- src/xid.rs
-	type Address is new String(1 .. Address_Length); -- src/address.rs
+	subtype XID     is String(1 .. Raw_ID_Length);  -- src/xid.rs
+	subtype Address is String(1 .. Address_Length); -- src/address.rs
+
+	-- crypto_box_curve25519xchacha20poly1305_PUBLICKEYBYTES not def in .ads
+	Box_Publickeybytes:        constant Integer := 32;
+	Box_Secretkeybytes:        constant Integer := 32;
+	Box_Pre_Shared_Key_Length: constant Integer := 32;
+	Box_Beforenmbytes:         constant Integer := 32;
+
+	Box_Noncebytes: constant Integer := Thin.crypto_box_NONCEBYTES;
+	Box_Macbytes:   constant Integer := Thin.crypto_box_MACBYTES;
+
+	subtype PK      is String(1 .. Box_Publickeybytes);
+	subtype SK      is String(1 .. Box_Secretkeybytes);
+	subtype PSK     is String(1 .. Box_Pre_Shared_Key_Length);
+	subtype Box_Key is String(1 .. Box_Beforenmbytes);
 
 	type U8 is mod 256;
 

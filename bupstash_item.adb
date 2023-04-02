@@ -12,22 +12,34 @@ with Serde;
 with Bupstash_Types;
 use  Bupstash_Types;
 
--- TODO CSTAT ASSERTION FAILURE REGARDING THE LENGTHS. TO BE FIXED...
---      At this point we might want to add some printfs to the original
---      program to find out more.
--- Key ID: 71538ec46eb361cfaaa6ab1f09fe61c4
--- -- Plain Text Metadata --
--- Primary Key ID = 71538ec46eb361cfaaa6ab1f09fe61c4
--- Timestamp (millis) =  10287469165540256422
--- -- Data Tree --
--- Height =  4011
--- Data_Chunk_Count =  9
--- Address = ab1f09fe61c40e96853c7c010000010209093dcef6c5de13537da07e16b15c97
--- -- Index Tree --
--- Height =  113
--- Data_Chunk_Count =  83
--- Address = 71538ec46eb361cfaaa6ab1f09fe61c40e96853c7c010000010209093dcef6c5
--- -- END --
+-- {
+--   "id": "b52cb4e46ccbb1ff0fbb5eccb340c852",
+--   "unix_timestamp": "1633102960142",
+--   "decryption_key_id": "71538ec46eb361cfaaa6ab1f09fe61c4",
+--   "data_tree": {
+--     "address": "09093dcef6c5de13537da07e16b15c97e28070bb5fe4e82df456ba2ff4b30615",
+--     "height": 1,
+--     "data_chunk_count": 2
+--   },
+--   "index_tree": {
+--     "address": "0bd22e15537d22a5d661070fe6fa18631dca557b5cd26ecd49815b16c5b61951",
+--     "height": 0,
+--     "data_chunk_count": 1
+--   },
+--   "data_size": 22930,
+--   "index_size": 2903,
+--   "put_key_id": "71538ec46eb361cfaaa6ab1f09fe61c4",
+--   "data_hash_key_part": "5775305b50b23c8853b5f94ff866d0da3829e1ee1ca78709eedde208dc2a056c",
+--   "index_hash_key_part": "15822b07030066919b889008a958190bfa08e46ea404eda7b3dbb003da8b9597",
+--   "unix_timestamp_millis": 1633102960142,
+--   "tags": {
+--     "id": "b52cb4e46ccbb1ff0fbb5eccb340c852",
+--     "name": "shl_popt.tar",
+--     "myid": "1",
+--     "size": "25.23KiB",
+--     "timestamp": "2021/10/01 17:42:40"
+--   }
+-- }
 
 package body Bupstash_Item is
 
@@ -41,13 +53,8 @@ package body Bupstash_Item is
 
 		function Get_Remaining_Data return Stream_Element_Array is
 			Remaining_Length: constant U64 :=
-						U64(Raw_Length - Offset);
+						U64(Raw_Length - Offset + 1);
 		begin
-			Ada.Assertions.Assert(Offset /= 0,
-				"Offset 0 detected. This hints towards " &
-				"unexpected compiler behaviour. " & 
-				"Not continuing execution.");
-
 			if Remaining_Length = Encrypted_Length then
 				return Raw_Data(Offset .. Raw_Length);
 			elsif Remaining_Length < Encrypted_Length then
@@ -87,71 +94,47 @@ package body Bupstash_Item is
 					"). Data corrupted or program bug.";
 			end if;
 		end Get_Remaining_Data;
-
-		function Close_FD return Boolean is
-		begin
-			Close(FD);
-			return True;
-		end Close_FD;
 	begin
 		Open(FD, In_File, Item_File);
-		begin
+		return Ret: Item do
 			Read(FD, Raw_Data, Raw_Length);
-			return (
-				Plain => Decode_Plain_Text_Item_Metadata(
-						Raw_Data(1 .. Raw_Length),
-						Encrypted_Length, Offset),
-				Decrypted => Decrypt_Secret_Item_Metadata(
-						Get_Remaining_Data),
-				Final => Close_FD
-			);
+			Decode_Plain_Text_Item_Metadata(
+					Raw_Data(1 .. Raw_Length),
+					Encrypted_Length, Offset, Ret.Plain);
+			declare
+				Remain: constant Stream_Element_Array :=
+							Get_Remaining_Data;
+			begin
+				Close(FD);
+				Decrypt_Secret_Item_Metadata(Remain,
+							Ret.Decrypted);
+			end;
 		exception
 		when others =>
 			Close(FD);
 			raise;
-		end;
+		end return;
 	end Init;
 
-	function Decode_Plain_Text_Item_Metadata(Raw: in Stream_Element_Array;
+	procedure Decode_Plain_Text_Item_Metadata(Raw: in Stream_Element_Array;
 					Encrypted_Length: out U64;
-					Offset: out Stream_Element_Offset)
-					return V3_Plain_Text_Item_Metadata is 
+					Offset: out Stream_Element_Offset;
+					Ret: out V3_Plain_Text_Item_Metadata) is 
 
 		type Local_Ptr is access all Stream_Element_Array;
 		package Ser is new Serde(Local_Ptr);
 		use Ser;
 
-		Raw_Aliased:              aliased Stream_Element_Array := Raw;
-		S:                        Serde_Ctx := Init(Raw_Aliased'Access);
-		Has_Index_Tree_Redundant: Boolean;
+		Raw_Aliased: aliased Stream_Element_Array := Raw;
+		S:           Serde_Ctx := Init(Raw_Aliased'Access);
 
-		function Decode_H_Tree_Metadata return H_Tree_Metadata is
+		procedure Decode_H_Tree_Metadata(HT: out H_Tree_Metadata) is
 		begin
-			return (
-				Height           => S.Next_Bare_UInt,
-				Data_Chunk_Count => S.Next_Bare_UInt,
-				Address          => Address(S.Next_Binary_String
-							(Address_Length))
-			);
+			HT.Height           := S.Next_Bare_UInt;
+			HT.Data_Chunk_Count := S.Next_Bare_UInt;
+			HT.Address          := Address(S.Next_Binary_String
+							(Address_Length));
 		end Decode_H_Tree_Metadata;
-
-		function Check_For_Index_Tree return Boolean is
-		begin
-			Has_Index_Tree_Redundant := (S.Next_U8 /= 0);
-			return Has_Index_Tree_Redundant;
-		end Check_For_Index_Tree;
-
-		function Make_Null_H_Tree_Metadata return H_Tree_Metadata is
-					(Address => Address_Null, others => 0);
-
-		function Store_Offset_And_Length return Boolean is
-		begin
-			-- this is part of the next already, but it is
-			-- convenient since we have the Serde ctx open already.
-			Encrypted_Length := S.Next_Bare_Uint;
-			Offset           := S.Get_Offset;
-			return True;
-		end Store_Offset_And_Length;
 
 		Metadata_Version: U8;
 	begin
@@ -161,29 +144,52 @@ package body Bupstash_Item is
 						"metadata version: " &
 						U8'Image(Metadata_Version + 1);
 		end if;
-		return (
-			Primary_Key_ID => XID(S.Next_Binary_String(
-								Raw_ID_Length)),
-			Unix_Timestamp_Millis => S.Next_U64,
-			Data_Tree      => Decode_H_Tree_Metadata,
-			Has_Index_Tree => Check_For_Index_Tree,
-			Index_Tree     => (if Has_Index_Tree_Redundant then
-						Decode_H_Tree_Metadata else
-						Make_Null_H_Tree_Metadata),
-			Final          => Store_Offset_And_Length
-		);
+
+		Ret.Primary_Key_ID := XID(S.Next_Binary_String(Raw_ID_Length));
+		Ret.Unix_Timestamp_Millis := S.Next_U64;
+		Decode_H_Tree_Metadata(Ret.Data_Tree);
+		Ret.Has_Index_Tree := (S.Next_U8 /= 0);
+
+		if Ret.Has_Index_Tree then
+			Decode_H_Tree_Metadata(Ret.Index_Tree);
+		end if;
+		
+		-- this is part of the next already, but it is
+		-- convenient since we have the Serde ctx open already.
+		Encrypted_Length := S.Next_Bare_UInt;
+		Offset           := S.Get_Offset;
 	end Decode_Plain_Text_Item_Metadata;
 
-	-- TODO CSTAT THIS DATA IS PREFIXED BY ITS LENGTH.
-	-- WE SHOULD REALLY READ THAT LENGTH IN THE PLAINTEXT PART AND THEN
-	-- PREPARE BUFFERS FROM THE OUT SIDE SUCH THAT PASSING THE FD INTO HERE
-	-- CAN BE AVOIDED!
-	function Decrypt_Secret_Item_Metadata(Raw: in Stream_Element_Array)
-					return V3_Secret_Item_Metadata is
+	procedure Decrypt_Secret_Item_Metadata(Raw: in Stream_Element_Array;
+					Ret: out V3_Secret_Item_Metadata) is
 	begin
-		return (
-			Final => False
-		);
+		-- DecryptionContext decryptCtx(key.getData().data_sk,
+		-- 				key.getData().data_psk);
+		-- std::size_t boxedPlaintextLength =
+		-- 	decryptCtx.getPlaintextLength(boxedCiphertextLength);
+		-- uint8_t plaintextBuffer[boxedPlaintextLength];
+
+		-- pub fn box_decrypt(pt: &mut [u8], bt: &[u8], bk: &BoxKey) -> bool {
+		--     if bt.len() < BOX_NONCEBYTES + BOX_MACBYTES {
+		--         return false;
+		--     }
+		--     if pt.len() != bt.len() - BOX_NONCEBYTES - BOX_MACBYTES {
+		--         return false;
+		--     }
+		--     let nonce = &bt[..BOX_NONCEBYTES];
+		--     let ct = &bt[BOX_NONCEBYTES..];
+		--     if unsafe {
+		--         sodium::crypto_box_curve25519xchacha20poly1305_open_easy_afternm(
+		--             pt.as_mut_ptr(),
+		--             ct.as_ptr(),
+		--             ct.len().try_into().unwrap(),
+		--             nonce.as_ptr(),
+		--             bk.bytes.as_ptr(),
+		--         )
+
+		-- TODO CSTAT CONTINUE HERE -> crypto.adb. Key can be passed as needed...
+		-- Will need a blake 3 implementation in Ada.
+		Ret.Final := False;
 	end Decrypt_Secret_Item_Metadata;
 
 	procedure Print(Ctx: in Item) is

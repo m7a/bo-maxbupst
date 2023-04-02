@@ -95,6 +95,7 @@ package body MaXBupst_OO is
 					Error_Help("KEY or REPO missing: KEY=" &
 						Key_File & ", REPO=" &
 						Repo_Directory);
+					return;
 				end if;
 				case Action is
 				when Action_List =>

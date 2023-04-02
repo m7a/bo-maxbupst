@@ -1,5 +1,3 @@
-with Ada.Assertions;
-use  Ada.Assertions;
 with Ada.Streams;
 use  Ada.Streams;
 with Bupstash_Types;
@@ -14,15 +12,15 @@ package body Serde is
 
 	function Next_Binary_String(Ctx: in out Serde_Ctx;
 					Length: in Integer) return String is
-		Raw_Substr: constant Stream_Element_Array :=
-				Ctx.Raw.all(Ctx.Offset ..
-				(Ctx.Offset + Stream_Element_Offset(Length)));
+		Length_Offset: constant Stream_Element_Offset :=
+						Stream_Element_Offset(Length);
 		Ret: String(1 .. Length);
 	begin
-		for I in Ret'Range loop
-			Ret(I) := Character'Val(Raw_Substr(Raw_Substr'First
-					+ Stream_Element_Offset(I - 1)));
+		for I in 1..Length loop
+			Ret(I) := Character'Val(Ctx.Raw.all(Ctx.Offset +
+						Stream_Element_Offset(I - 1)));
 		end loop;
+		Ctx.Offset := Ctx.Offset + Length_Offset;
 		return Ret;
 	end Next_Binary_String;
 
@@ -36,14 +34,14 @@ package body Serde is
 
 	function Next_U64(Ctx: in out Serde_Ctx) return U64 is
 		Ret: constant U64 :=
-			Shift_Left(U64(Ctx.Raw.all(Ctx.Offset + 0)), 56) or
-			Shift_Left(U64(Ctx.Raw.all(Ctx.Offset + 1)), 48) or
-			Shift_Left(U64(Ctx.Raw.all(Ctx.Offset + 2)), 40) or
-			Shift_Left(U64(Ctx.Raw.all(Ctx.Offset + 3)), 32) or
-			Shift_Left(U64(Ctx.Raw.all(Ctx.Offset + 4)), 24) or
-			Shift_Left(U64(Ctx.Raw.all(Ctx.Offset + 5)), 16) or
-			Shift_Left(U64(Ctx.Raw.all(Ctx.Offset + 6)),  8) or
-			Shift_Left(U64(Ctx.Raw.all(Ctx.Offset + 7)),  0);
+			Shift_Left(U64(Ctx.Raw.all(Ctx.Offset + 0)),  0) or
+			Shift_Left(U64(Ctx.Raw.all(Ctx.Offset + 1)),  8) or
+			Shift_Left(U64(Ctx.Raw.all(Ctx.Offset + 2)), 16) or
+			Shift_Left(U64(Ctx.Raw.all(Ctx.Offset + 3)), 24) or
+			Shift_Left(U64(Ctx.Raw.all(Ctx.Offset + 4)), 32) or
+			Shift_Left(U64(Ctx.Raw.all(Ctx.Offset + 5)), 40) or
+			Shift_Left(U64(Ctx.Raw.all(Ctx.Offset + 6)), 48) or
+			Shift_Left(U64(Ctx.Raw.all(Ctx.Offset + 7)), 56);
 	begin
 		Ctx.Offset := Ctx.Offset + 8;
 		return Ret;

@@ -75,38 +75,39 @@ package body Bupstash_Key is
 			Key_Type := S.Next_U8;
 			Ada.Assertions.Assert(Key_Type = 0, "Wrong key type: " &
 				U8'Image(Key_Type) & ". Expected key type 0");
-			return (
-				ID => Bupstash_Types.XID(S.Next_Binary_String(
-						Bupstash_Types.Raw_ID_Length)),
-				Rollsum_Key => S.Next_Binary_String(
-						Random_Seed_Bytes),
-				Data_Hash_Key_Part_1 => S.Next_Binary_String(
-						Partial_Hash_Key_Length),
-				Data_Hash_Key_Part_2 => S.Next_Binary_String(
-						Partial_Hash_Key_Length),
-				Data_PK => S.Next_Binary_String(
-						Box_Publickeybytes),
-				Data_SK => S.Next_Binary_String(
-						Box_Secretkeybytes),
-				Data_PSK => S.Next_Binary_String(
-						Box_Pre_Shared_Key_Length),
-				Idx_Hash_Key_Part_1 => S.Next_Binary_String(
-						Partial_Hash_Key_Length),
-				Idx_Hash_Key_Part_2 => S.Next_Binary_String(
-						Partial_Hash_Key_Length),
-				Idx_PK => S.Next_Binary_String(
-						Box_Publickeybytes),
-				Idx_SK => S.Next_Binary_String(
-						Box_Secretkeybytes),
-				Idx_PSK => S.Next_Binary_String(
-						Box_Pre_Shared_Key_Length),
-				Metadata_PK => S.Next_Binary_String(
-						Box_Publickeybytes),
-				Metadata_SK => S.Next_Binary_String(
-						Box_Secretkeybytes),
-				Metadata_PSK => S.Next_Binary_String(
-						Box_Pre_Shared_Key_Length)
-			);
+
+			return R: Key do
+				R.ID := Bupstash_Types.XID(S.Next_Binary_String(
+						Bupstash_Types.Raw_ID_Length));
+				R.Rollsum_Key := S.Next_Binary_String(
+						Random_Seed_Bytes);
+				R.Data_Hash_Key_Part_1 := S.Next_Binary_String(
+						Partial_Hash_Key_Length);
+				R.Data_Hash_Key_Part_2 := S.Next_Binary_String(
+						Partial_Hash_Key_Length);
+				R.Data_PK := PK(S.Next_Binary_String(
+						Box_Publickeybytes));
+				R.Data_SK := SK(S.Next_Binary_String(
+						Box_Secretkeybytes));
+				R.Data_PSK := PSK(S.Next_Binary_String(
+						Box_Pre_Shared_Key_Length));
+				R.Idx_Hash_Key_Part_1 := S.Next_Binary_String(
+						Partial_Hash_Key_Length);
+				R.Idx_Hash_Key_Part_2 := S.Next_Binary_String(
+						Partial_Hash_Key_Length);
+				R.Idx_PK := PK(S.Next_Binary_String(
+						Box_Publickeybytes));
+				R.Idx_SK := SK(S.Next_Binary_String(
+						Box_Secretkeybytes));
+				R.Idx_PSK := PSK(S.Next_Binary_String(
+						Box_Pre_Shared_Key_Length));
+				R.Metadata_PK := PK(S.Next_Binary_String(
+						Box_Publickeybytes));
+				R.Metadata_SK := SK(S.Next_Binary_String(
+						Box_Secretkeybytes));
+				R.Metadata_PSK := PSK(S.Next_Binary_String(
+						Box_Pre_Shared_Key_Length));
+			end return;
 		end;
 	end Init;
 

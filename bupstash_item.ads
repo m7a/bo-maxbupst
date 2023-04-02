@@ -1,5 +1,4 @@
 with Ada.Streams;
-with Ada.Streams.Stream_IO;
 with Bupstash_Key;
 with Bupstash_Types;
 
@@ -40,7 +39,6 @@ private
 		Data_Tree:             H_Tree_Metadata;
 		Has_Index_Tree:        Boolean;
 		Index_Tree:            H_Tree_Metadata;
-		Final:                 Boolean; -- ignore, just for program flow
 	end record;
 
 	-- src/oplog.rs
@@ -61,18 +59,17 @@ private
 	type Item is tagged limited record
 		Plain:     V3_Plain_Text_Item_Metadata;
 		Decrypted: V3_Secret_Item_Metadata;
-		Final:     Boolean; -- ignore, just for program flow
 	end record;
 
-	function Decode_Plain_Text_Item_Metadata(
+	procedure Decode_Plain_Text_Item_Metadata(
 			Raw: in Ada.Streams.Stream_Element_Array;
 			Encrypted_Length: out Bupstash_Types.U64;
-			Offset: out Ada.Streams.Stream_Element_Offset)
-			return V3_Plain_Text_Item_Metadata;
+			Offset: out Ada.Streams.Stream_Element_Offset;
+			Ret: out V3_Plain_Text_Item_Metadata);
 
-	function Decrypt_Secret_Item_Metadata(
-			Raw: in Ada.Streams.Stream_Element_Array)
-			return V3_Secret_Item_Metadata;
+	procedure Decrypt_Secret_Item_Metadata(
+			Raw: in Ada.Streams.Stream_Element_Array;
+			Ret: out V3_Secret_Item_Metadata);
 
 	procedure Print(Ctx: in H_Tree_Metadata);
 
