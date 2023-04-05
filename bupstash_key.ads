@@ -60,20 +60,19 @@ private
 	-- ~~~
 
 	-- all lengths in bytes
-	Partial_Hash_Key_Length:   constant Integer := 32;
-	Random_Seed_Bytes:         constant Integer := 32;
+	Random_Seed_Bytes: constant Integer := 32;
 
 	-- TODO THIS IS ACTUALLY THE RAW KEY TYPE NOT THE ONE WE WOULD LIKE TO ULTIMATELY RETURN. CONVERT THEM TO THE RESPECTIVE NA-CL KEYS AS NEEDED.
 	type Key is tagged limited record
 		ID:                   Bupstash_Types.XID;
 		Rollsum_Key:          String(1 .. Random_Seed_Bytes);
-		Data_Hash_Key_Part_1: String(1 .. Partial_Hash_Key_Length);
-		Data_Hash_Key_Part_2: String(1 .. Partial_Hash_Key_Length);
+		Data_Hash_Key_Part_1: Bupstash_Types.Partial_Hash_Key;
+		Data_Hash_Key_Part_2: Bupstash_Types.Partial_Hash_Key;
 		Data_PK:              Bupstash_Types.PK;
 		Data_SK:              Bupstash_Types.SK;
 		Data_PSK:             Bupstash_Types.PSK;
-		Idx_Hash_Key_Part_1:  String(1 .. Partial_Hash_Key_Length);
-		Idx_Hash_Key_Part_2:  String(1 .. Partial_Hash_Key_Length);
+		Idx_Hash_Key_Part_1:  Bupstash_Types.Partial_Hash_Key;
+		Idx_Hash_Key_Part_2:  Bupstash_Types.Partial_Hash_Key;
 		Idx_PK:               Bupstash_Types.PK;
 		Idx_SK:               Bupstash_Types.SK;
 		Idx_PSK:              Bupstash_Types.PSK;

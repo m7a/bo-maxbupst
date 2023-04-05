@@ -4,10 +4,10 @@ with Sodium.Thin_Binding;
 
 package Bupstash_Types is
 	
-	Raw_ID_Length:             constant Integer := 16;
+	Raw_ID_Len:             constant Integer := 16;
 	Address_Length:            constant Integer := 32;
 
-	subtype XID     is String(1 .. Raw_ID_Length);  -- src/xid.rs
+	subtype XID     is String(1 .. Raw_ID_Len);  -- src/xid.rs
 	subtype Address is String(1 .. Address_Length); -- src/address.rs
 
 	-- crypto_box_curve25519xchacha20poly1305_PUBLICKEYBYTES not def in .ads
@@ -23,11 +23,12 @@ package Bupstash_Types is
 	Box_Macbytes:   constant Integer := Integer(
 				Sodium.Thin_Binding.crypto_box_MACBYTES);
 
-	subtype PK      is String(1 .. Box_Publickeybytes);
-	subtype SK      is String(1 .. Box_Secretkeybytes);
-	subtype PSK     is String(1 .. Box_Pre_Shared_Key_Length);
-	subtype Box_Key is String(1 .. Box_Beforenmbytes);
-	subtype Hash    is String(1 .. Hash_Bytes);
+	subtype PK               is String(1 .. Box_Publickeybytes);
+	subtype SK               is String(1 .. Box_Secretkeybytes);
+	subtype PSK              is String(1 .. Box_Pre_Shared_Key_Length);
+	subtype Box_Key          is String(1 .. Box_Beforenmbytes);
+	subtype Hash             is String(1 .. Hash_Bytes);
+	subtype Partial_Hash_Key is String(1 .. Hash_Bytes);
 
 	type U8 is mod 256;
 

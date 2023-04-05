@@ -16,6 +16,13 @@ package Serde is
 	function Next_Bare_UInt(Ctx: in out Serde_Ctx)
 						return Bupstash_Types.U64;
 
+	-- TODO CSTAT MAY NEED TO IMPLEMENT. ALTERNATIVELY IMPLEMENT SOMETHING THAT WORKS FOR STRING/STRING MAPS. THE PROBLEM IS HERE: WHERE DO WE ALLOCATE THE DYNAMIC MEMORY FROM???
+	-- get length of map that follows, then we have an alternating sequence
+	-- of keys and values (always even) that can be decoded using the other
+	-- functions
+	--function Next_Map(Ctx: in out Serde_Ctx) return Bupstash_Types.U64 is
+	--						(Ctx.Next_Bare_UInt);
+
 	function Get_Offset(Ctx: in Serde_Ctx)
 				return Ada.Streams.Stream_Element_Offset;
 

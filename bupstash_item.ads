@@ -54,9 +54,10 @@ private
 	--     pub index_size: serde_bare::Uint,
 	-- }
 	type V3_Secret_Item_Metadata is limited record
-		Plain_Text_Hash: Bupstash_Types.Hash;
-		Send_Key_ID:     Bupstash_Types.XID;
-		Final:           Boolean; -- TODO z DEBUG ONLY
+		Plain_Text_Hash:       Bupstash_Types.Hash;
+		Send_Key_ID:           Bupstash_Types.XID;
+		Index_Hash_Key_Part_2: Bupstash_Types.Partial_Hash_Key;
+		Data_Hash_Key_Part_2:  Bupstash_Types.Partial_Hash_Key;
 	end record;
 
 	type Item is tagged limited record

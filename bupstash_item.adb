@@ -146,7 +146,7 @@ package body Bupstash_Item is
 						U8'Image(Metadata_Version + 1);
 		end if;
 
-		Ret.Primary_Key_ID := XID(S.Next_Binary_String(Raw_ID_Length));
+		Ret.Primary_Key_ID := XID(S.Next_Binary_String(Raw_ID_Len));
 		Ret.Unix_Timestamp_Millis := S.Next_U64;
 		Decode_H_Tree_Metadata(Ret.Data_Tree);
 		Ret.Has_Index_Tree := (S.Next_U8 /= 0);
@@ -173,12 +173,12 @@ package body Bupstash_Item is
 		use Ser;
 		S: Serde_Ctx := Init(PT'Access);
 	begin
-		Ret.Plain_Text_Hash := S.Next_Binary_String(
-						Ret.Plain_Text_Hash'Length);
-		Ret.Send_Key_ID := XID(S.Next_Binary_String(Raw_ID_Length));
+		Ret.Plain_Text_Hash       := S.Next_Binary_String(Hash_Bytes);
+		Ret.Send_Key_ID           := S.Next_Binary_String(Raw_ID_Len);
+		Ret.Index_Hash_Key_Part_2 := S.Next_Binary_String(Hash_Bytes);
+		Ret.Data_Hash_Key_Part_2  := S.Next_Binary_String(Hash_Bytes);
+		-- TODO CSTAT CONTINUE DECODE PLAINTEXT HERE NOW - Need to serde decode a BTreeMap<String, String>!
 		--Ret.Index_Hash_Key_Part_2: 
-		-- TODO CSTAT CONTINUE DECODE PLAINTEXT HERE NOW
-		Ret.Final := False;
 	end Decrypt_Secret_Item_Metadata;
 
 	procedure Print(Ctx: in Item) is
@@ -197,11 +197,17 @@ package body Bupstash_Item is
 		else
 			Put_Line("-- No Index Tree present --");
 		end if;
-		Put_Line("-- Decrypted -- ");
+		Put_Line("-- V3 Secret Item Metadata -- ");
 		Put_Line("Plain Text Hash = " & Sodium.Functions.As_Hexidecimal(
 						Ctx.Decrypted.Plain_Text_Hash));
 		Put_Line("Send Key ID = " & Sodium.Functions.As_Hexidecimal(
 						Ctx.Decrypted.Send_Key_ID));
+		Put_Line("Index Hash Key Part = " &
+					Sodium.Functions.As_Hexidecimal(
+					Ctx.Decrypted.Index_Hash_Key_Part_2));
+		Put_Line("Data Hash Key Part = " &
+					Sodium.Functions.As_Hexidecimal(
+					Ctx.Decrypted.Data_Hash_Key_Part_2));
 		Put_Line("-- END --");
 	end Print;
 

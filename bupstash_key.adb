@@ -78,13 +78,13 @@ package body Bupstash_Key is
 
 			return R: Key do
 				R.ID := Bupstash_Types.XID(S.Next_Binary_String(
-						Bupstash_Types.Raw_ID_Length));
+						Bupstash_Types.Raw_ID_Len));
 				R.Rollsum_Key := S.Next_Binary_String(
 						Random_Seed_Bytes);
 				R.Data_Hash_Key_Part_1 := S.Next_Binary_String(
-						Partial_Hash_Key_Length);
+						Hash_Bytes);
 				R.Data_Hash_Key_Part_2 := S.Next_Binary_String(
-						Partial_Hash_Key_Length);
+						Hash_Bytes);
 				R.Data_PK := PK(S.Next_Binary_String(
 						Box_Publickeybytes));
 				R.Data_SK := SK(S.Next_Binary_String(
@@ -92,9 +92,9 @@ package body Bupstash_Key is
 				R.Data_PSK := PSK(S.Next_Binary_String(
 						Box_Pre_Shared_Key_Length));
 				R.Idx_Hash_Key_Part_1 := S.Next_Binary_String(
-						Partial_Hash_Key_Length);
+						Hash_Bytes);
 				R.Idx_Hash_Key_Part_2 := S.Next_Binary_String(
-						Partial_Hash_Key_Length);
+						Hash_Bytes);
 				R.Idx_PK := PK(S.Next_Binary_String(
 						Box_Publickeybytes));
 				R.Idx_SK := SK(S.Next_Binary_String(
