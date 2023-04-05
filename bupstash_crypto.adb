@@ -77,7 +77,7 @@ package body Bupstash_Crypto is
 				Decrypt_Message_curve25519xchacha20poly1305(
 				CT_Conv, Key, Nonce_Conv);
 		PT_Conv: Stream_Element_Array(1 .. PT'Length);
-		-- TODO NOT SURE IF THIS IS GOING TO WORK. ON PROBLEMS TRY TO DO AN EXPLICITY COPY HERE?
+		-- TODO z SEEMS TO WORK OK FOR NOW / NOT SURE IF THIS IS GOING TO WORK. ON PROBLEMS TRY TO DO AN EXPLICITY COPY HERE?
 		for PT_Conv'Address use PT'Address;
 	begin
 		return PT_Conv;

@@ -11,35 +11,6 @@ with Bupstash_Types;
 use  Bupstash_Types;
 with Bupstash_Crypto;
 
--- {
---   "id": "b52cb4e46ccbb1ff0fbb5eccb340c852",
---   "unix_timestamp": "1633102960142",
---   "decryption_key_id": "71538ec46eb361cfaaa6ab1f09fe61c4",
---   "data_tree": {
---     "address": "09093dcef6c5de13537da07e16b15c97e28070bb5fe4e82df456ba2ff4b30615",
---     "height": 1,
---     "data_chunk_count": 2
---   },
---   "index_tree": {
---     "address": "0bd22e15537d22a5d661070fe6fa18631dca557b5cd26ecd49815b16c5b61951",
---     "height": 0,
---     "data_chunk_count": 1
---   },
---   "data_size": 22930,
---   "index_size": 2903,
---   "put_key_id": "71538ec46eb361cfaaa6ab1f09fe61c4",
---   "data_hash_key_part": "5775305b50b23c8853b5f94ff866d0da3829e1ee1ca78709eedde208dc2a056c",
---   "index_hash_key_part": "15822b07030066919b889008a958190bfa08e46ea404eda7b3dbb003da8b9597",
---   "unix_timestamp_millis": 1633102960142,
---   "tags": {
---     "id": "b52cb4e46ccbb1ff0fbb5eccb340c852",
---     "name": "shl_popt.tar",
---     "myid": "1",
---     "size": "25.23KiB",
---     "timestamp": "2021/10/01 17:42:40"
---   }
--- }
-
 package body Bupstash_Item is
 
 	function Init(Key: in Bupstash_Key.Key; Item_File: in String)
@@ -172,17 +143,35 @@ package body Bupstash_Item is
 		package Ser is new Serde(Local_Ptr);
 		use Ser;
 		S: Serde_Ctx := Init(PT'Access);
+		Num_Entries_In_Map: U64;
 	begin
 		Ret.Plain_Text_Hash       := S.Next_Binary_String(Hash_Bytes);
 		Ret.Send_Key_ID           := S.Next_Binary_String(Raw_ID_Len);
 		Ret.Index_Hash_Key_Part_2 := S.Next_Binary_String(Hash_Bytes);
 		Ret.Data_Hash_Key_Part_2  := S.Next_Binary_String(Hash_Bytes);
-		-- TODO CSTAT CONTINUE DECODE PLAINTEXT HERE NOW - Need to serde decode a BTreeMap<String, String>!
-		--Ret.Index_Hash_Key_Part_2: 
+		Num_Entries_In_Map        := S.Next_Bare_UInt;
+
+		for I in 1 .. Num_Entries_In_Map loop
+			declare
+				Key: constant String := S.Next_Variable_String;
+				Val: constant String := S.Next_Variable_String;
+			begin
+				Ret.Tags.Insert(Key, Val);
+			end;
+		end loop;
+
+		Ret.Data_Size  := S.Next_Bare_UInt;
+		Ret.Index_Size := S.Next_Bare_UInt;
 	end Decrypt_Secret_Item_Metadata;
 
 	procedure Print(Ctx: in Item) is
 		use Ada.Text_IO;
+
+		procedure Print_Tag(Position: in Cursor) is
+		begin
+			Put_Line("  " & Key(Position) & " = " &
+							Element(Position));
+		end Print_Tag;
 	begin
 		Put_Line("-- Plain Text Metadata --");
 		Put_Line("Primary Key ID = " & Sodium.Functions.As_Hexidecimal(
@@ -208,6 +197,12 @@ package body Bupstash_Item is
 		Put_Line("Data Hash Key Part = " &
 					Sodium.Functions.As_Hexidecimal(
 					Ctx.Decrypted.Data_Hash_Key_Part_2));
+		Put_Line("Tags:");
+		Ctx.Decrypted.Tags.Iterate(Print_Tag'Access);
+		Put_Line("Data Size = " & Bupstash_Types.U64'Image(
+						Ctx.Decrypted.Data_Size));
+		Put_Line("Index Size = " & Bupstash_Types.U64'Image(
+						Ctx.Decrypted.Index_Size));
 		Put_Line("-- END --");
 	end Print;
 

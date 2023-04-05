@@ -68,4 +68,7 @@ package body Serde is
 		return Result;
 	end Next_Bare_UInt;
 
+	function Next_Variable_String(Ctx: in out Serde_Ctx) return String is
+		(Ctx.Next_Binary_String(Integer(Ctx.Next_Bare_UInt)));
+
 end Serde;

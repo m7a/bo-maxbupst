@@ -11,7 +11,7 @@ package body Bupstash_Repository is
 	end Init;
 
 	procedure Print_Info(Repo: in Repository) is
-		-- TODO x HARDCODED PATH...
+		-- TODO ASTAT HARDCODED PATH... / CHECK WHAT THE RUST DOES HERE!
 		It: Bupstash_Item.Item := Bupstash_Item.Init(Repo.Key, "testrepo/items/b52cb4e46ccbb1ff0fbb5eccb340c852");
 	begin
 		Repo.Key.Print;

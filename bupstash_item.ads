@@ -2,6 +2,7 @@ with Ada.Streams;
 use  Ada.Streams;
 with Bupstash_Key;
 with Bupstash_Types;
+with Ada.Containers.Indefinite_Ordered_Maps;
 
 package Bupstash_Item is
 
@@ -12,6 +13,11 @@ package Bupstash_Item is
 	procedure Print(Ctx: in Item);
 
 private
+
+	package String_Ordered_Maps is new Ada.Containers.
+			Indefinite_Ordered_Maps(Key_Type     => String,
+						Element_Type => String);
+	use String_Ordered_Maps;
 
 	Item_Buf_Size: constant Ada.Streams.Stream_Element_Offset := 4096;
 
@@ -58,6 +64,9 @@ private
 		Send_Key_ID:           Bupstash_Types.XID;
 		Index_Hash_Key_Part_2: Bupstash_Types.Partial_Hash_Key;
 		Data_Hash_Key_Part_2:  Bupstash_Types.Partial_Hash_Key;
+		Tags:                  Map;
+		Data_Size:             Bupstash_Types.U64;
+		Index_Size:            Bupstash_Types.U64;
 	end record;
 
 	type Item is tagged limited record
