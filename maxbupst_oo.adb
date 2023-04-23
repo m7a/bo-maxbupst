@@ -137,8 +137,12 @@ package body MaXBupst_OO is
 		Repository.Print_Info;
 	end Run_List;
 
-	-- TODO NEXT GO HERE!
-	procedure Run_Get(Key_File: in String;
-		Repo_Directory: in String; Selected_ID: in String) is null;
+	procedure Run_Get(Key_File: in String; Repo_Directory: in String;
+						Selected_ID: in String) is
+		Repository: constant Bupstash_Repository.Repository :=
+			Bupstash_Repository.Init(Key_File, Repo_Directory);
+	begin
+		Repository.Restore(Selected_ID);
+	end Run_Get;
 		
 end MaXBupst_OO;

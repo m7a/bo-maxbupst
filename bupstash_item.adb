@@ -222,4 +222,14 @@ package body Bupstash_Item is
 								Ctx.Address)));
 	end Print;
 
+	function Has_XID(Ctx: in Item; Cmp: in Bupstash_Types.XID)
+					return Boolean is (Ctx.ID = Cmp);
+
+	procedure Restore(Ctx: in Item; Key: in Bupstash_Key.Key;
+						Data_Directory: in String) is
+	begin
+		Ada.Text_IO.Put_Line("BEGIN RESTORE");
+		-- TODO ... CSTAT htree and index are the interesting things!. Probably start with TreeReader (htree.rs)?
+	end Restore;
+
 end Bupstash_Item;

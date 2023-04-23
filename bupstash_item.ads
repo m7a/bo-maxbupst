@@ -12,6 +12,12 @@ package Bupstash_Item is
 								return Item;
 	procedure Print(Ctx: in Item);
 
+	function Has_XID(Ctx: in Item; Cmp: in Bupstash_Types.XID)
+								return Boolean;
+
+	procedure Restore(Ctx: in Item; Key: in Bupstash_Key.Key;
+						Data_Directory: in String);
+
 private
 
 	package String_Ordered_Maps is new Ada.Containers.
