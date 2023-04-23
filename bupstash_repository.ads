@@ -1,8 +1,9 @@
 with Bupstash_Key;
+with Bupstash_Item;
 
 package Bupstash_Repository is
 
-	type Repository is tagged limited private;
+	type Repository(N: Integer) is tagged limited private;
 
 	function Init(Key_File: in String; Repo_Directory: in String)
 							return Repository;
@@ -10,8 +11,11 @@ package Bupstash_Repository is
 
 private
 
-	type Repository is tagged limited record
+	type Items is array (Integer range <>) of Bupstash_Item.Item;
+
+	type Repository(N: Integer) is tagged limited record
 		Key: Bupstash_Key.Key;
+		It:  Items(1 .. N);
 	end record;
 
 end Bupstash_Repository;

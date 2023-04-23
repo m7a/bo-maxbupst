@@ -3,6 +3,7 @@ use  Ada.Streams.Stream_IO;
 with Ada.Text_IO;
 with Ada.Assertions;
 use  Ada.Assertions;
+with Ada.Directories;
 
 with Sodium.Functions;
 
@@ -67,6 +68,8 @@ package body Bupstash_Item is
 	begin
 		Open(FD, In_File, Item_File);
 		return Ret: Item do
+			Ret.ID := Sodium.Functions.As_Binary(
+					Ada.Directories.Base_Name(Item_File));
 			Read(FD, Raw_Data, Raw_Length);
 			Decode_Plain_Text_Item_Metadata(
 					Raw_Data(1 .. Raw_Length),
@@ -173,6 +176,9 @@ package body Bupstash_Item is
 							Element(Position));
 		end Print_Tag;
 	begin
+		New_Line;
+		Put_Line("Item ID = " &
+				Sodium.Functions.As_Hexidecimal(Ctx.ID));
 		Put_Line("-- Plain Text Metadata --");
 		Put_Line("Primary Key ID = " & Sodium.Functions.As_Hexidecimal(
 						Ctx.Plain.Primary_Key_ID));

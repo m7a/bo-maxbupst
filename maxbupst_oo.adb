@@ -9,7 +9,6 @@ package body MaXBupst_OO is
 
 	procedure Main is
 	begin
-		Ada.Text_IO.Put_Line("HELLO"); Ada.Text_IO.Flush;
 		if Argument_Count < 1 then
 			Help;
 			Set_Exit_Status(Failure);
@@ -18,7 +17,6 @@ package body MaXBupst_OO is
 				Argument(1) = "-?" then
 			Help;
 		elsif Argument(1) = "-l" or Argument(1) = "list" then
-			Ada.Text_IO.Put_Line("HELLO LIST"); Ada.Text_IO.Flush;
 			Parse_And_Run(Action_List);
 		elsif (Argument(1) = "-g" or Argument(1) = "get")
 					and not (Argument_Count < 2) then
@@ -31,10 +29,8 @@ package body MaXBupst_OO is
 	procedure Help is
 		use Ada.Text_IO;
 	begin
-		Put_Line("Ma_Sys.ma Bupstash Extraction Tool " &
-				"1.1.0, Copyright (c) 2021, 2022 Ma_Sys.ma.");
-		Put_Line("For further info send an e-mail to " &
-				"Ma_Sys.ma@web.de.");
+		Put_Line("Bupstash Extraction Tool 1.1.1, " &
+				"(c) 2021-2023 Ma_Sys.ma <info@masysma.net>");
 		New_Line;
 		Put_Line("USAGE " & Command_Name & " --help");
 		Put_Line("        Display help screen.");
@@ -70,7 +66,6 @@ package body MaXBupst_OO is
 			Has_Next_Arg: constant Boolean := I < AC;
 			No_More_Args: constant Boolean := I > AC;
 		begin
-			Ada.TExt_IO.Put_Line("DEBUG ARG " & Integer'Image(I) & " hasnext=" & Boolean'Image(Has_Next_Arg) & ", nomore=" & Boolean'Image(No_More_Args));
 			if Has_Next_Arg and then Argument(I)'Length = 2 then
 				case Argument(I)(2) is
 				when 'k' => Parse_And_Run_Recursive(I + 2,
@@ -99,7 +94,6 @@ package body MaXBupst_OO is
 				end if;
 				case Action is
 				when Action_List =>
-					Ada.Text_IO.Put_Line("HELLO RUN LIST"); Ada.Text_IO.Flush;
 					Run_List(Key_File, Repo_Directory);
 				when Action_Get =>
 					if Selected_ID = Parameter_Not_Set then
@@ -143,6 +137,7 @@ package body MaXBupst_OO is
 		Repository.Print_Info;
 	end Run_List;
 
+	-- TODO NEXT GO HERE!
 	procedure Run_Get(Key_File: in String;
 		Repo_Directory: in String; Selected_ID: in String) is null;
 		

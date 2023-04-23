@@ -70,6 +70,7 @@ private
 	end record;
 
 	type Item is tagged limited record
+		ID:        Bupstash_Types.XID;
 		Plain:     V3_Plain_Text_Item_Metadata;
 		Decrypted: V3_Secret_Item_Metadata;
 	end record;
