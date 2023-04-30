@@ -12,6 +12,8 @@ with Bupstash_Types;
 use  Bupstash_Types;
 with Bupstash_Crypto;
 
+with Bupstash_HTree;
+
 package body Bupstash_Item is
 
 	function Init(Key: in Bupstash_Key.Key; Item_File: in String)
@@ -227,6 +229,11 @@ package body Bupstash_Item is
 
 	procedure Restore(Ctx: in Item; Key: in Bupstash_Key.Key;
 						Data_Directory: in String) is
+		TR: Bupstash_HTree.Tree_Reader := Bupstash_HTree.Init(
+			Ctx.Plain.Index_Tree.Height,
+			Ctx.Plain.Index_Tree.Data_Chunk_Count,
+			Ctx.Plain.Index_Tree.Address
+		);
 	begin
 		Ada.Text_IO.Put_Line("BEGIN RESTORE");
 		-- TODO ... CSTAT htree and index are the interesting things!. Probably start with TreeReader (htree.rs)?

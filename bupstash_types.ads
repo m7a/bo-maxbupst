@@ -5,7 +5,7 @@ with Sodium.Thin_Binding;
 package Bupstash_Types is
 	
 	Raw_ID_Len:             constant Integer := 16;
-	Address_Length:            constant Integer := 32;
+	Address_Length:         constant Integer := 32;
 
 	subtype XID     is String(1 .. Raw_ID_Len);  -- src/xid.rs
 	subtype Address is String(1 .. Address_Length); -- src/address.rs
@@ -31,6 +31,9 @@ package Bupstash_Types is
 	subtype Partial_Hash_Key is String(1 .. Hash_Bytes);
 
 	type U8 is mod 256;
+	type Octets is array (Natural range <>) of U8;
+
+	Null_Octets: constant Octets(1 .. 0) := (others => 0);
 
 	-- https://gcc.gnu.org/bugzilla/show_bug.cgi?id=15939
 	-- type U64 is range 0..2**64-1;
@@ -41,6 +44,9 @@ package Bupstash_Types is
 
 	function Shift_Left(I: in U64; N: in Natural) return U64 is
 		(U64(Interfaces.Shift_Left(Interfaces.Unsigned_64(I), N)));
+
+	-- TODO MAY NOT BE NEEDED
+	function String_To_Octets(S: in String) return Octets;
 
 	--type UInt is new Interfaces.Unsigned_32;
 	--function Shift_Left(I: in UInt; N: in Natural) return UInt is
