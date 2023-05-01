@@ -1,10 +1,14 @@
 with Ada.Streams;
 use  Ada.Streams;
-with Bupstash_Key;
-with Bupstash_Types;
 with Ada.Containers.Indefinite_Ordered_Maps;
 
+with Bupstash_Key;
+with Bupstash_Types;
+with Bupstash_HTree;
+
 package Bupstash_Item is
+
+	IO_Error: exception;
 
 	type Item is tagged limited private;
 
@@ -15,6 +19,7 @@ package Bupstash_Item is
 	function Has_XID(Ctx: in Item; Cmp: in Bupstash_Types.XID)
 								return Boolean;
 
+	-- TODO MAY MAKE SENSE TO PROVIDE THIS PROCEDURE EXTERNALLY?
 	procedure Restore(Ctx: in Item; Key: in Bupstash_Key.Key;
 						Data_Directory: in String);
 
@@ -92,5 +97,13 @@ private
 					Ret: out V3_Secret_Item_Metadata);
 
 	procedure Print(Ctx: in H_Tree_Metadata);
+
+	procedure HTree_To_Buffer(Data_Directory: in String;
+				Reader: in out Bupstash_HTree.Tree_Reader;
+				Buffer: in out Stream_Element_Array);
+	function Get_Chunk(Data_Directory: in String;
+		Addr: in Bupstash_Types.Address) return Stream_Element_Array;
+	function Unauthenticated_Decompress(Raw: in Stream_Element_Array)
+						return Bupstash_Types.Octets;
 
 end Bupstash_Item;

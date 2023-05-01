@@ -3,6 +3,8 @@ with Interfaces;
 with Sodium.Thin_Binding;
 
 package Bupstash_Types is
+
+	Corrupt_Or_Tampered_Data_Error: exception;
 	
 	Raw_ID_Len:             constant Integer := 16;
 	Address_Length:         constant Integer := 32;
@@ -33,6 +35,8 @@ package Bupstash_Types is
 	type U8 is mod 256;
 	type Octets is array (Natural range <>) of U8;
 
+	Compress_Footer_No_Compression: constant U8 := 0;
+
 	Null_Octets: constant Octets(1 .. 0) := (others => 0);
 
 	-- https://gcc.gnu.org/bugzilla/show_bug.cgi?id=15939
@@ -48,5 +52,8 @@ package Bupstash_Types is
 	--type UInt is new Interfaces.Unsigned_32;
 	--function Shift_Left(I: in UInt; N: in Natural) return UInt is
 	--	(UInt(Interfaces.Shift_Left(Interfaces.Unsigned_32(I), N)));
+
+	function Octets_To_Address(O: in Octets)
+			return Address with Pre => O'Length = Address_Length;
 
 end Bupstash_Types;

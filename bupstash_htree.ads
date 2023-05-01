@@ -5,8 +5,6 @@ use  Bupstash_Types;
 -- Minimal, htree.rs-compatible implementation for restoration purposes
 package Bupstash_HTree is
 
-	Corrupt_Or_Tampered_Data_Error: exception;
-
 	type Tree_Reader is tagged limited private;
 
 	type Option_Usize_Address is record
@@ -22,6 +20,8 @@ package Bupstash_HTree is
 	procedure Push_Level(Ctx: in out Tree_Reader; Level: U64;
 							Data: in Octets);
 	function Next_Addr(Ctx: in out Tree_Reader) return Option_Usize_Address;
+	function Has_Height(Ctx: in Tree_Reader) return Boolean;
+	function Get_Height(Ctx: in Tree_Reader) return U64;
 
 private
 

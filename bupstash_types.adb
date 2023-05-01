@@ -1,10 +1,10 @@
 package body Bupstash_Types is
 
-	function String_To_Octets(S: in String) return Octets is
-		RV: Octets(S'First .. S'Last);
-		for RV'Address use S'Address;
+	function Octets_To_Address(O: in Octets) return Address is
+		A_Ret: Address;
+		for A_Ret'Address use O'Address;
 	begin
-		return RV;
-	end String_To_Octets;
-
+		return A_Ret;
+	end Octets_To_Address;
+	
 end Bupstash_Types;

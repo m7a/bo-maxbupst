@@ -150,4 +150,9 @@ package body Bupstash_HTree is
 		return RV;
 	end Address_Slice_Vector;
 
+	function Has_Height(Ctx: in Tree_Reader) return Boolean is
+					(not HO.Is_Empty(Ctx.Tree_Heights));
+	function Get_Height(Ctx: in Tree_Reader) return U64 is
+					(HO.Last_Element(Ctx.Tree_Heights));
+
 end Bupstash_HTree;
