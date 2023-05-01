@@ -83,7 +83,8 @@ package body Bupstash_Crypto is
 		return PT_Conv;
 	end Box_Decrypt;
 
-	-- TODO CURRENTLY NOT NEEDED. MOVE TO WHERE IT IS GOING TO BE USED ONCE WE NEED SUCH A THING!
+	-- TODO CURRENTLY NOT NEEDED. MOVE TO WHERE IT IS GOING TO BE USED ONCE WE NEED SUCH A THING! / MAY NEED TO EXPOSE SOMETHING LIKE THE DECODE_FULL_BLOCK_WITH_TRAILER PROCEDURE IN THE API THEN?
+	-- TODO AWAWAH BUPSTASH MAY INDEED USE A BLOCK COMPRESSION DIRECTLY WTF?
 	-- TODO z currently no dynamic growth supported here yet. Also does some
 	--      probably superflous copying. Should check out if we can prepare
 	--      the buffer in the right size and then use only one buffer here?

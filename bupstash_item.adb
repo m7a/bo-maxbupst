@@ -236,7 +236,8 @@ package body Bupstash_Item is
 		);
 	begin
 		Ada.Text_IO.Put_Line("BEGIN RESTORE");
-		-- TODO ... CSTAT htree and index are the interesting things!. Probably start with TreeReader (htree.rs)?
+		-- TODO ... CSTAT send_htree. It looks as if the actual thing is not the tree reader but rather something else??? repo.pipelined_get_chunks? No it must be server.rs send_htree really. Need to implement this very function and decrypt/decompress correctly such that we get a byte buffer with the index contents as values.
+		-- it seems the tree reader stats with large height and chunk count and a single address and then decreases hight as it gets more addresses. To read the next addresses just follow the current address as described in the code server.rs:send_htree. Pipelined get chunks is just a very fancy "open file with name = xid".
 	end Restore;
 
 end Bupstash_Item;

@@ -45,9 +45,6 @@ package Bupstash_Types is
 	function Shift_Left(I: in U64; N: in Natural) return U64 is
 		(U64(Interfaces.Shift_Left(Interfaces.Unsigned_64(I), N)));
 
-	-- TODO MAY NOT BE NEEDED
-	function String_To_Octets(S: in String) return Octets;
-
 	--type UInt is new Interfaces.Unsigned_32;
 	--function Shift_Left(I: in UInt; N: in Natural) return UInt is
 	--	(UInt(Interfaces.Shift_Left(Interfaces.Unsigned_32(I), N)));
