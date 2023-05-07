@@ -8,8 +8,6 @@ with Bupstash_HTree;
 
 package Bupstash_Item is
 
-	IO_Error: exception;
-
 	type Item is tagged limited private;
 
 	function Init(Key: in Bupstash_Key.Key; Item_File: in String)
@@ -19,9 +17,10 @@ package Bupstash_Item is
 	function Has_XID(Ctx: in Item; Cmp: in Bupstash_Types.XID)
 								return Boolean;
 
-	-- TODO MAY MAKE SENSE TO PROVIDE THIS PROCEDURE EXTERNALLY?
-	procedure Restore(Ctx: in Item; Key: in Bupstash_Key.Key;
-						Data_Directory: in String);
+	function Has_Index_Tree(Ctx: in Item) return Boolean;
+	function Init_HTree_Reader_For_Index_Tree(Ctx: in Item) return
+						Bupstash_HTree.Tree_Reader;
+	function Get_Index_Size(Ctx: in Item) return Bupstash_Types.U64;
 
 private
 
@@ -97,13 +96,5 @@ private
 					Ret: out V3_Secret_Item_Metadata);
 
 	procedure Print(Ctx: in H_Tree_Metadata);
-
-	procedure HTree_To_Buffer(Data_Directory: in String;
-				Reader: in out Bupstash_HTree.Tree_Reader;
-				Buffer: in out Stream_Element_Array);
-	function Get_Chunk(Data_Directory: in String;
-		Addr: in Bupstash_Types.Address) return Stream_Element_Array;
-	function Unauthenticated_Decompress(Raw: in Stream_Element_Array)
-						return Bupstash_Types.Octets;
 
 end Bupstash_Item;

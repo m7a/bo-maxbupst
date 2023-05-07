@@ -1,9 +1,8 @@
 with Ada.Directories;
 use  Ada.Directories;
-
 with Sodium.Functions;
-
 with Bupstash_Types;
+with Bupstash_Restorer;
 
 package body Bupstash_Repository is
 
@@ -64,7 +63,8 @@ package body Bupstash_Repository is
 	begin
 		for I of Repo.It loop
 			if I.Has_XID(Item_XID) then
-				I.Restore(Repo.Key, Data_Directory);
+				Bupstash_Restorer.Restore(I, Repo.Key,
+								Data_Directory);
 				return;
 			end if;
 		end loop;

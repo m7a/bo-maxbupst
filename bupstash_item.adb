@@ -225,134 +225,16 @@ package body Bupstash_Item is
 	function Has_XID(Ctx: in Item; Cmp: in Bupstash_Types.XID)
 					return Boolean is (Ctx.ID = Cmp);
 
-	-- TODO REALLY NEED TO SUPPORT BOTH CASES: INDEX TREE PRESENT YES AND NO. TEST REPOS CONTAIN THESE TWO CASES!
-	procedure Restore(Ctx: in Item; Key: in Bupstash_Key.Key;
-						Data_Directory: in String) is
-		TR: Bupstash_HTree.Tree_Reader := Bupstash_HTree.Init(
-			Ctx.Plain.Index_Tree.Height,
-			Ctx.Plain.Index_Tree.Data_Chunk_Count,
-			Ctx.Plain.Index_Tree.Address
-		);
-		Buf: Stream_Element_Array(0 .. Stream_Element_Offset(
-						Ctx.Decrypted.Index_Size) - 1);
-	begin
-		Ada.Text_IO.Put_Line("BEGIN RESTORE");
-		HTree_To_Buffer(Data_Directory, TR, Buf);
-		Ada.Text_IO.Put_Line("HTREE TO BUFFER COMPLETE");
-		-- TODO It looks as if the actual thing is not the tree reader but rather something else??? repo.pipelined_get_chunks? No it must be server.rs send_htree really. Need to implement this very function and decrypt/decompress correctly such that we get a byte buffer with the index contents as values.
-		-- it seems the tree reader stats with large height and chunk count and a single address and then decreases hight as it gets more addresses. To read the next addresses just follow the current address as described in the code server.rs:send_htree. Pipelined get chunks is just a very fancy "open file with name = xid".
-	end Restore;
+	function Has_Index_Tree(Ctx: in Item) return Boolean is
+						(Ctx.Plain.Has_Index_Tree);
 
-	-- TODO MOVE AND EXTEND AS NEEDED
-	-- TODO CSTAT MISSING DECRYPTION: NEED TO ADD THE "Following" aspect that checks the addresses with their contents (client.rs:944-978) and the decryption of "On Chunk" data.
-	-- server.rs send_htree and client.rs receive_htree
-	procedure HTree_To_Buffer(Data_Directory: in String;
-				Reader: in out Bupstash_HTree.Tree_Reader;
-				Buffer: in out Stream_Element_Array) is
+	function Init_HTree_Reader_For_Index_Tree(Ctx: in Item) return
+						Bupstash_HTree.Tree_Reader is
+		(Bupstash_HTree.Init(Ctx.Plain.Index_Tree.Height,
+					Ctx.Plain.Index_Tree.Data_Chunk_Count,
+					Ctx.Plain.Index_Tree.Address));
 
-		Buffer_Pos: Stream_Element_Offset := Buffer'First;
-
-		procedure On_Chunk(Chunk: in Stream_Element_Array) is
-		begin
-			Buffer(Buffer_Pos .. Buffer_Pos + Chunk'Length - 1) :=
-									Chunk;
-			Buffer_Pos := Buffer_Pos + Chunk'Length;
-		end On_Chunk;
-
-		procedure Process_Addresses(Address_Buf: in Octets) is
-			N_Addresses: constant Integer := Address_Buf'Length /
-							(8 + Address_Length);
-		begin
-			for I in 0 .. N_Addresses - 1 loop
-				declare
-					Offset: constant Integer :=
-						8 + I * (8 + Address_Length);
-				begin
-					On_Chunk(Get_Chunk(Data_Directory,
-						Octets_To_Address(Address_Buf(
-							Offset .. Offset +
-							Address_Length - 1))));
-				end;
-			end loop;
-		end Process_Addresses;
-	begin
-		while Reader.Has_Height loop -- rust None/Some(_)
-			if Reader.Get_Height = 0 then -- rust Some(0)
-				Process_Addresses(Reader.Pop_Level);
-			else -- rust Some(_)
-				-- X INDENTATION EXCEEDED
-				declare
-					Optional: constant
-					Bupstash_HTree.Option_Usize_Address :=
-					Reader.Next_Addr;
-				begin
-					-- Rust calls `on_chunk` here but since
-					-- this implementation does not do the
-					-- client/server distinction there is no
-					-- need to do this because it seems to
-					-- only be used to re-construct the same
-					-- htree on the client which we can
-					-- avoid by directly using the "server"
-					-- tree for everything here.
-					if Optional.Is_Present then
-					Reader.Push_Level(Optional.Height - 1,
-					Unauthenticated_Decompress(Get_Chunk(
-					Data_Directory, Optional.Addr)));
-					end if;
-				end;
-			end if;
-		end loop;
-	end HTree_To_Buffer;
-
-	-- TODO Z ORIGINAL IMPLEMENTATION MAKES THIS A FUNCTION OF "REPOSITORY" WHICH IS THE BETTER DESIGN
-	function Get_Chunk(Data_Directory: in String; Addr: in Address)
-						return Stream_Element_Array is
-		Path: constant String := Ada.Directories.Compose(Data_Directory,
-					Sodium.Functions.As_Hexidecimal(Addr));
-		SZ: constant Ada.Directories.File_Size :=
-						Ada.Directories.Size(Path);
-
-		RV: Stream_Element_Array(0 .. Stream_Element_Offset(SZ) - 1);
-
-		FD: File_Type;
-		RD: Stream_Element_Offset;
-		EOF: Boolean;
-	begin
-		Open(FD, In_File, Path);
-		Read(FD, RV, RD);
-		EOF := End_Of_File(FD);
-		Close(FD);
-		if not EOF or RD /= RV'Last then
-			raise IO_Error with
-				"File size change while reading " & Path &
-				". E=" & Stream_Element_Offset'Image(RV'Last) &
-				"R=" & Stream_Element_Offset'Image(RD);
-		end if;
-		return RV;
-	exception
-		when IO_Error =>
-			raise;
-		when others => 
-			raise IO_Error with "Unable to read file: " & Path;
-	end Get_Chunk;
-
-	-- This is essentially a fancy function to remove the last byte from
-	-- the provided input buffer.
-	function Unauthenticated_Decompress(Raw: in Stream_Element_Array)
-								return Octets is
-		Ret: Octets(0 .. Raw'Length - 2);
-		for Ret'Address use Raw'Address;
-	begin
-		if Raw(Raw'Last) /= Stream_Element(
-					Compress_Footer_No_Compression) then
-			raise Corrupt_Or_Tampered_Data_Error with
-				"""Decompression of unauthetnicated data is " &
-				"currently disabled."" Found: " &
-				Stream_Element'Image(Raw(Raw'Last)) &
-				", expected " &
-				U8'Image(Compress_Footer_No_Compression);
-		end if;
-		return Ret;
-	end Unauthenticated_Decompress;
+	function Get_Index_Size(Ctx: in Item) return Bupstash_Types.U64 is
+						(Ctx.Decrypted.Index_Size);
 
 end Bupstash_Item;
