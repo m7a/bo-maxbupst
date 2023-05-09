@@ -1,7 +1,222 @@
 with Ada.Containers;
 use  Ada.Containers;
+with Ada.Streams.Stream_IO;
+use  Ada.Streams.Stream_IO;
+with Ada.Directories;
+
+with Ada.Text_IO; -- TODO DEBUG ONLY
+
+with Sodium.Functions;
+with Blake3;
+
+with Bupstash_Crypto;
 
 package body Bupstash_HTree is
+
+	------------------------------------------------------------------------
+	------------------------------------------------------------------------
+	--  High-Level API  ----------------------------------------------------
+	------------------------------------------------------------------------
+	------------------------------------------------------------------------
+
+	-- TODO DEBUG ONLY
+	procedure Hexdump_Quick(Data: in Stream_Element_Array) is
+		Str: String(1 .. Data'Length);
+		for Str'Address use Data'Address;
+
+		I: Integer := Str'First;
+		Hex: String (1 .. 2);
+	begin
+		while I <= Str'Last loop
+			Hex := Sodium.Functions.As_Hexidecimal(Str(I .. I));
+			if Hex'Length = 1 then
+				Ada.Text_IO.Put("\x0" & Hex);
+			else
+				Ada.Text_IO.Put("\x" & Hex);
+			end if;
+			I := I + 1;
+		end loop;
+		Ada.Text_IO.New_Line;
+	end Hexdump_Quick;
+
+	procedure Read_And_Decrypt(Ctx:    in out Tree_Reader;
+				   Plaintext: out Stream_Element_Array;
+				   Data_Dir:   in String;
+				   HK:         in Hash_Key;
+				   Cnt_SK:     in SK;
+				   Cnt_PSK:    in PSK) is
+
+		package SV is new Ada.Containers.Vectors(Index_Type => Natural,
+					Element_Type => Stream_Element);
+
+		Data_Vec: SV.Vector;
+
+		-- TODO z PERFORMANCE: SHOULD USE AN INIT/UPDATE/FINAL SCHEME HERE TO IN-PLACE DECRYPT INSTEAD OF BUILDING A COPY IN A VECTOR
+		procedure On_Chunk(Chunk: in Stream_Element_Array) is
+		begin
+			SV.Reserve_Capacity(Data_Vec,
+					SV.Length(Data_Vec) + Chunk'Length);
+			for I of Chunk loop
+				SV.Append(Data_Vec, I);
+			end loop;
+		end On_Chunk;
+
+		-- TODO x MINOR CODE DUPLICATION COMPARED TO BELOW. DO NOT KNOW HOW TO DO THIS CORRECTLY HERE
+		function Vector_To_Stream_Element_Array(Vec: in SV.Vector)
+						return Stream_Element_Array is
+			RV: Stream_Element_Array(0 .. Stream_Element_Offset(
+							SV.Length(Vec)) - 1);
+			I: Stream_Element_Offset := RV'First;
+			C: SV.Cursor := SV.First(Vec);
+		begin
+			while I <= RV'Last loop
+				RV(I) := SV.Element(C);
+				I := I + 1;
+				C := SV.Next(C);
+			end loop;
+			return RV;
+		end Vector_To_Stream_Element_Array;
+	begin
+		Ctx.Walk(Data_Dir, HK, On_Chunk'Access);
+		declare
+			Ciphertext: constant Stream_Element_Array :=
+				Vector_To_Stream_Element_Array(Data_Vec);
+			DCTX: Bupstash_Crypto.Decryption_Context :=
+				Bupstash_Crypto.New_Decryption_Context(
+				Cnt_SK, Cnt_PSK);
+		begin
+			Hexdump_Quick(Ciphertext);
+			declare
+				Plaintext_Compressed: constant Stream_Element_Array := Bupstash_Crypto.Decrypt_Data(DCTX, Ciphertext);
+			begin
+				-- TODO ASTAT NEED TO DECOMPRESS HERE, THIS IS ONLY AN INTERMEDIATE STEP HERE:
+				for I in Plaintext_Compressed'Range loop
+					Plaintext(Plaintext'First + I -
+						Plaintext_Compressed'First) :=
+						Plaintext_Compressed(I);
+				end loop;
+			end;
+		end;
+	end Read_And_Decrypt;
+
+	-- server.rs send_htree and client.rs receive_htree
+	procedure Walk(Ctx: in out Tree_Reader; Data_Dir: in String;
+				HK: in Hash_Key; On_Chunk: access procedure
+					(Chunk: in Stream_Element_Array)) is
+
+		procedure Process_Addresses(Address_Buf: in Octets) is
+			Block: constant Integer := 8 + Address_Length;
+		begin
+			for I in 0 .. Address_Buf'Length / Block - 1 loop
+				On_Chunk(Get_Chunk(Data_Dir, Octets_To_Address(
+					Address_Buf(8 + I * Block ..
+					8 + I * Block + Address_Length - 1))));
+			end loop;
+		end Process_Addresses;
+
+		procedure Try_Tree_Traversal is
+			Opt: constant Option_Usize_Address := Ctx.Next_Addr;
+		begin
+			if Opt.Is_Present then 
+				Ctx.Check_Push_Level(Opt.Height - 1, Opt.Addr,
+					Unauthenticated_Decompress(Get_Chunk(
+							Data_Dir, Opt.Addr))); 
+			end if;
+		end Try_Tree_Traversal;
+	begin
+		while Ctx.Has_Height loop -- rust None/Some(_)
+			if Ctx.Get_Height = 0 then -- rust Some(0)
+				Process_Addresses(Ctx.Pop_Level);
+			else -- rust Some(_)
+				Try_Tree_Traversal;
+			end if;
+		end loop;
+	end Walk;
+
+	-- Rust calls `on_chunk` here but since this implementation does
+	-- not do the client/server distinction there is no need to do
+	-- this because it seems to only be used to re-construct the
+	-- same htree on the client which we can avoid by directly using
+	-- the "server" tree for everything here.
+	procedure Check_Push_Level(Ctx: in out Tree_Reader; Height: in U64;
+					Addr: in Address; Value: in Octets) is
+		CMP: constant Address := Get_Tree_Block_Address(Value);
+	begin
+		if CMP /= Addr then
+			raise Corrupt_Or_Tampered_Data_Error with
+				"Declared address " & Sodium.Functions.
+				As_Hexidecimal(Addr) & " but data indicates " &
+				Sodium.Functions.As_Hexidecimal(CMP);
+		end if;
+		Ctx.Push_Level(Height - 1, Value);
+	end Check_Push_Level;
+
+	-- htree::tree_block_address
+	function Get_Tree_Block_Address(Data: in Octets) return Address is
+		Data_Conv: String(Data'Range);
+		for Data_Conv'Address use Data'Address;
+		Ctx: Blake3.Hasher := Blake3.Init;
+	begin
+		Ctx.Update(Data_Conv);
+		return Ctx.Final;
+	end Get_Tree_Block_Address;
+
+	function Get_Chunk(Data_Directory: in String; Addr: in Address)
+						return Stream_Element_Array is
+		Path: constant String := Ada.Directories.Compose(Data_Directory,
+					Sodium.Functions.As_Hexidecimal(Addr));
+		SZ: constant Ada.Directories.File_Size :=
+						Ada.Directories.Size(Path);
+
+		RV: Stream_Element_Array(0 .. Stream_Element_Offset(SZ) - 1);
+
+		FD: File_Type;
+		RD: Stream_Element_Offset;
+		EOF: Boolean;
+	begin
+		Ada.Text_IO.Put_Line("TODO DEBUG GET CHUNK " & Path);
+		Open(FD, In_File, Path);
+		Read(FD, RV, RD);
+		EOF := End_Of_File(FD);
+		Close(FD);
+		if not EOF or RD /= RV'Last then
+			raise IO_Error with
+				"File size change while reading " & Path &
+				". E=" & Stream_Element_Offset'Image(RV'Last) &
+				"R=" & Stream_Element_Offset'Image(RD);
+		end if;
+		return RV;
+	exception
+		when IO_Error =>
+			raise;
+		when others => 
+			raise IO_Error with "Unable to read file: " & Path;
+	end Get_Chunk;
+
+	-- This is essentially a fancy function to remove the last byte from
+	-- the provided input buffer.
+	function Unauthenticated_Decompress(Raw: in Stream_Element_Array)
+								return Octets is
+		Ret: Octets(0 .. Raw'Length - 2);
+		for Ret'Address use Raw'Address;
+	begin
+		if Raw(Raw'Last) /= Stream_Element(
+					Compress_Footer_No_Compression) then
+			raise Corrupt_Or_Tampered_Data_Error with
+				"""Decompression of unauthetnicated data is " &
+				"currently disabled."" Found: " &
+				Stream_Element'Image(Raw(Raw'Last)) &
+				", expected " &
+				U8'Image(Compress_Footer_No_Compression);
+		end if;
+		return Ret;
+	end Unauthenticated_Decompress;
+
+	------------------------------------------------------------------------
+	------------------------------------------------------------------------
+	--  Low-Level API  -----------------------------------------------------
+	------------------------------------------------------------------------
+	------------------------------------------------------------------------
 
 	function Init(Level: in U64; Data_Chunk_Count: in U64;
 					Addr: in Address) return Tree_Reader is

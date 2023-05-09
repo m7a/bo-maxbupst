@@ -1,11 +1,25 @@
 with Ada.Containers.Vectors;
+with Ada.Streams; -- Stream_Element_Array
+use  Ada.Streams;
 with Bupstash_Types;
 use  Bupstash_Types;
 
--- Minimal, htree.rs-compatible implementation for restoration purposes
+-- htree.rs-compatible implementation for restoration purposes
 package Bupstash_HTree is
 
+	IO_Error: exception;
+
 	type Tree_Reader is tagged limited private;
+
+	-- High-Level API (provided by Ma_Sys.ma only)
+	procedure Read_And_Decrypt(Ctx:    in out Tree_Reader;
+				   Plaintext: out Stream_Element_Array;
+				   Data_Dir:   in String;
+				   HK:         in Hash_Key;
+				   Cnt_SK:     in SK;
+				   Cnt_PSK:    in PSK);
+
+	-- Low-Level API (as provided by Bupstash)
 
 	type Option_Usize_Address is record
 		Is_Present: Boolean;
@@ -24,6 +38,18 @@ package Bupstash_HTree is
 	function Get_Height(Ctx: in Tree_Reader) return U64;
 
 private
+
+	procedure Walk(Ctx: in out Tree_Reader; Data_Dir: in String;
+				HK: in Hash_Key; On_Chunk: access procedure
+					(Chunk: in Stream_Element_Array));
+	procedure Check_Push_Level(Ctx: in out Tree_Reader; Height: in U64;
+					Addr: in Address; Value: in Octets);
+	function Get_Tree_Block_Address(Data: in Bupstash_Types.Octets) return
+							Bupstash_Types.Address;
+	function Get_Chunk(Data_Directory: in String;
+		Addr: in Bupstash_Types.Address) return Stream_Element_Array;
+	function Unauthenticated_Decompress(Raw: in Stream_Element_Array)
+						return Bupstash_Types.Octets;
 
 	-- Height and Offset Vectors
 	package HO is new Ada.Containers.Vectors(Index_Type => Natural,
