@@ -6,10 +6,17 @@ package Bupstash_Key is
 	type Key is tagged limited private;
 
 	function Init(Key_File: in String)   return Key;
+
 	function Get_Metadata_SK (K: in Key) return Bupstash_Types.SK;
 	function Get_Metadata_PSK(K: in Key) return Bupstash_Types.PSK;
+	function Get_Idx_SK      (K: in Key) return Bupstash_Types.SK;
+	function Get_Idx_PSK     (K: in Key) return Bupstash_Types.PSK;
 
 	procedure Print(K: in Key);
+	function Derive_Index_Hash_Key(K: in Key)
+					return Bupstash_Types.Hash_Key;
+	function Derive_Data_Hash_Key(K: in Key) return Bupstash_Types.Hash_Key;
+
 
 private
 
@@ -62,7 +69,6 @@ private
 	-- all lengths in bytes
 	Random_Seed_Bytes: constant Integer := 32;
 
-	-- TODO THIS IS ACTUALLY THE RAW KEY TYPE NOT THE ONE WE WOULD LIKE TO ULTIMATELY RETURN. CONVERT THEM TO THE RESPECTIVE NA-CL KEYS AS NEEDED.
 	type Key is tagged limited record
 		ID:                   Bupstash_Types.XID;
 		Rollsum_Key:          String(1 .. Random_Seed_Bytes);
@@ -85,5 +91,12 @@ private
 		(K.Metadata_SK);
 	function Get_Metadata_PSK(K: in Key) return Bupstash_Types.PSK is
 		(K.Metadata_PSK);
+	function Get_Idx_SK(K: in Key) return Bupstash_Types.SK is (K.Idx_SK);
+	function Get_Idx_PSK(K: in Key) return Bupstash_Types.PSK is
+		(K.Idx_PSK);
+
+	function Derive_Hash_Key(Part_1, Part_2:
+					in Bupstash_Types.Partial_Hash_Key)
+					return Bupstash_Types.Hash_Key;
 
 end Bupstash_Key;

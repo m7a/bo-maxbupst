@@ -31,6 +31,7 @@ package Bupstash_Types is
 	subtype Box_Key          is String(1 .. Box_Beforenmbytes);
 	subtype Hash             is String(1 .. Hash_Bytes);
 	subtype Partial_Hash_Key is String(1 .. Hash_Bytes);
+	subtype Hash_Key         is Hash;
 
 	type U8 is mod 256;
 	type Octets is array (Natural range <>) of U8;
