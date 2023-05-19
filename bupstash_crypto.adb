@@ -1,6 +1,8 @@
 with Blake3;
 with Sodium.Functions;
 
+with Bupstash_COmpression;
+
 package body Bupstash_Crypto is
 
 	function New_Decryption_Context(SK: in Bupstash_Types.SK;
@@ -42,9 +44,9 @@ package body Bupstash_Crypto is
 		--		exit;
 		--	end if;
 		--end loop;
-		return Box_Decrypt(CT(CT'First .. CT'Last -
-			Stream_Element_Offset(
-			Bupstash_Types.Box_Publickeybytes)), Ctx.Ephemeral_BK);
+		return Bupstash_Compression.Decompress(Box_Decrypt(CT(CT'First
+			.. CT'Last - Stream_Element_Offset(
+			Bupstash_Types.Box_Publickeybytes)), Ctx.Ephemeral_BK));
 	end Decrypt_Data;
 
 	-- "TODO REVIEWME" in Bupstash: NB: This uses a keyed hash and not the

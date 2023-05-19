@@ -48,8 +48,6 @@ private
 							Bupstash_Types.Address;
 	function Get_Chunk(Data_Directory: in String;
 		Addr: in Bupstash_Types.Address) return Stream_Element_Array;
-	function Unauthenticated_Decompress(Raw: in Stream_Element_Array)
-						return Bupstash_Types.Octets;
 
 	-- Height and Offset Vectors
 	package HO is new Ada.Containers.Vectors(Index_Type => Natural,

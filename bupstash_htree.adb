@@ -10,6 +10,7 @@ with Sodium.Functions;
 with Blake3;
 
 with Bupstash_Crypto;
+with Bupstash_Compression;
 
 package body Bupstash_HTree is
 
@@ -18,26 +19,6 @@ package body Bupstash_HTree is
 	--  High-Level API  ----------------------------------------------------
 	------------------------------------------------------------------------
 	------------------------------------------------------------------------
-
-	-- TODO DEBUG ONLY
-	procedure Hexdump_Quick(Data: in Stream_Element_Array) is
-		Str: String(1 .. Data'Length);
-		for Str'Address use Data'Address;
-
-		I: Integer := Str'First;
-		Hex: String (1 .. 2);
-	begin
-		while I <= Str'Last loop
-			Hex := Sodium.Functions.As_Hexidecimal(Str(I .. I));
-			if Hex'Length = 1 then
-				Ada.Text_IO.Put("\x0" & Hex);
-			else
-				Ada.Text_IO.Put("\x" & Hex);
-			end if;
-			I := I + 1;
-		end loop;
-		Ada.Text_IO.New_Line;
-	end Hexdump_Quick;
 
 	procedure Read_And_Decrypt(Ctx:    in out Tree_Reader;
 				   Plaintext: out Stream_Element_Array;
@@ -84,18 +65,13 @@ package body Bupstash_HTree is
 			DCTX: Bupstash_Crypto.Decryption_Context :=
 				Bupstash_Crypto.New_Decryption_Context(
 				Cnt_SK, Cnt_PSK);
+			Plaintext_Decompressed: constant Stream_Element_Array :=
+				Bupstash_Crypto.Decrypt_Data(DCTX, Ciphertext);
 		begin
-			Hexdump_Quick(Ciphertext);
-			declare
-				Plaintext_Compressed: constant Stream_Element_Array := Bupstash_Crypto.Decrypt_Data(DCTX, Ciphertext);
-			begin
-				-- TODO ASTAT NEED TO DECOMPRESS HERE, THIS IS ONLY AN INTERMEDIATE STEP HERE:
-				for I in Plaintext_Compressed'Range loop
-					Plaintext(Plaintext'First + I -
-						Plaintext_Compressed'First) :=
-						Plaintext_Compressed(I);
-				end loop;
-			end;
+			Plaintext(Plaintext'First ..
+				Plaintext'First + Plaintext_Decompressed'Last -
+				Plaintext_Decompressed'First) :=
+					Plaintext_Decompressed;
 		end;
 	end Read_And_Decrypt;
 
@@ -118,9 +94,10 @@ package body Bupstash_HTree is
 			Opt: constant Option_Usize_Address := Ctx.Next_Addr;
 		begin
 			if Opt.Is_Present then 
+				-- indentation exceeded
 				Ctx.Check_Push_Level(Opt.Height - 1, Opt.Addr,
-					Unauthenticated_Decompress(Get_Chunk(
-							Data_Dir, Opt.Addr))); 
+				Bupstash_Compression.Unauthenticated_Decompress(
+				Get_Chunk(Data_Dir, Opt.Addr))); 
 			end if;
 		end Try_Tree_Traversal;
 	begin
@@ -192,25 +169,6 @@ package body Bupstash_HTree is
 		when others => 
 			raise IO_Error with "Unable to read file: " & Path;
 	end Get_Chunk;
-
-	-- This is essentially a fancy function to remove the last byte from
-	-- the provided input buffer.
-	function Unauthenticated_Decompress(Raw: in Stream_Element_Array)
-								return Octets is
-		Ret: Octets(0 .. Raw'Length - 2);
-		for Ret'Address use Raw'Address;
-	begin
-		if Raw(Raw'Last) /= Stream_Element(
-					Compress_Footer_No_Compression) then
-			raise Corrupt_Or_Tampered_Data_Error with
-				"""Decompression of unauthetnicated data is " &
-				"currently disabled."" Found: " &
-				Stream_Element'Image(Raw(Raw'Last)) &
-				", expected " &
-				U8'Image(Compress_Footer_No_Compression);
-		end if;
-		return Ret;
-	end Unauthenticated_Decompress;
 
 	------------------------------------------------------------------------
 	------------------------------------------------------------------------

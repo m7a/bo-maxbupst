@@ -56,7 +56,7 @@ package body Bupstash_Restorer is
 				    Cnt_PSK   => Key.Get_Idx_PSK);
 		Ada.Text_IO.Put_Line("HTREE COMPLETE");
 		Hexdump_Quick(Buffer);
-		Ada.Text_IO.Put_Line("HTREE TO BUFFER COMPLETE");
+		--Ada.Text_IO.Put_Line("HTREE TO BUFFER COMPLETE");
 	end Restore_With_Index;
 
 	procedure Restore_Without_Index(Ctx: in Bupstash_Item.Item;

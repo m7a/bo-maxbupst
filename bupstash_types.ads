@@ -37,6 +37,7 @@ package Bupstash_Types is
 	type Octets is array (Natural range <>) of U8;
 
 	Compress_Footer_No_Compression: constant U8 := 0;
+	Compress_Footer_LZ4_Compressed: constant U8 := 1;
 
 	Null_Octets: constant Octets(1 .. 0) := (others => 0);
 
