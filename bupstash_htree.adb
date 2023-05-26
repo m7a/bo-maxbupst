@@ -4,8 +4,6 @@ with Ada.Streams.Stream_IO;
 use  Ada.Streams.Stream_IO;
 with Ada.Directories;
 
-with Ada.Text_IO; -- TODO DEBUG ONLY
-
 with Sodium.Functions;
 with Blake3;
 
@@ -32,7 +30,6 @@ package body Bupstash_HTree is
 
 		Data_Vec: SV.Vector;
 
-		-- TODO z PERFORMANCE: SHOULD USE AN INIT/UPDATE/FINAL SCHEME HERE TO IN-PLACE DECRYPT INSTEAD OF BUILDING A COPY IN A VECTOR
 		procedure On_Chunk(Chunk: in Stream_Element_Array) is
 		begin
 			SV.Reserve_Capacity(Data_Vec,
@@ -151,7 +148,6 @@ package body Bupstash_HTree is
 		RD: Stream_Element_Offset;
 		EOF: Boolean;
 	begin
-		Ada.Text_IO.Put_Line("TODO DEBUG GET CHUNK " & Path);
 		Open(FD, In_File, Path);
 		Read(FD, RV, RD);
 		EOF := End_Of_File(FD);
