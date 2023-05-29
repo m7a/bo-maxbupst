@@ -3,24 +3,32 @@ with Ada.Streams; -- Stream_Element_Array
 use  Ada.Streams;
 with Bupstash_Types;
 use  Bupstash_Types;
+with Ada.Iterator_Interfaces;
 
 -- htree.rs-compatible implementation for restoration purposes
 package Bupstash_HTree is
 
 	IO_Error: exception;
 
-	type Tree_Reader is tagged limited private;
+	-- High-Level and Iterator API (provided by Ma_Sys.ma only)
+	type Tree_Cursor(N: Integer) is private;
+	function Cursor_Has_Element(C: in Tree_Cursor) return Boolean;
+	package It is new Ada.Iterator_Interfaces(Cursor => Tree_Cursor,
+					Has_Element => Cursor_Has_Element);
 
-	-- High-Level API (provided by Ma_Sys.ma only)
-	procedure Read_And_Decrypt(Ctx:    in out Tree_Reader;
-				   Plaintext: out Stream_Element_Array;
-				   Data_Dir:   in String;
-				   HK:         in Hash_Key;
-				   Cnt_SK:     in SK;
-				   Cnt_PSK:    in PSK);
+	type Tree_Iterator(N: Integer; Last: Integer) is new It.Forward_Iterator
+								with private;
+	overriding function First(Object: in Tree_Iterator) return Tree_Cursor;
+	overriding function Next(Object: in Tree_Iterator;
+				Position: in Tree_Cursor) return Tree_Cursor;
+	function Element(Position: in Tree_Cursor) return Stream_Element_Array;
+
+	type Tree_Reader is limited private;
+	function Init(Ctx: in out Tree_Reader; Data_Directory: in String;
+					HK: in Hash_Key) return Tree_Iterator;
 
 	-- Low-Level API (as provided by Bupstash)
-
+	-- TODO x MIGHT FACTOR THIS OUT AS A BUPSTAH_HTREE_LL subpackage and then provide an "unified init" that takes the "low level" init parameters?
 	type Option_Usize_Address is record
 		Is_Present: Boolean;
 		Height:     U64;
@@ -39,9 +47,22 @@ package Bupstash_HTree is
 
 private
 
-	procedure Walk(Ctx: in out Tree_Reader; Data_Dir: in String;
-				HK: in Hash_Key; On_Chunk: access procedure
-					(Chunk: in Stream_Element_Array));
+	type Tree_Cursor(N: Integer) is record
+		Data_Dir: String(1 .. N);
+		Addr:     Address;
+		Pos:      Integer;
+		Last:     Integer;
+	end record;
+
+	type Tree_Iterator(N: Integer; Last: Integer)
+					is new It.Forward_Iterator with record
+		Data_Dir:    String(1 .. N);
+		Address_Buf: Octets(0 .. Last);
+	end record;
+
+	function Cursor_For_Index(Ctx: in Tree_Iterator; I: in Integer) return
+								Tree_Cursor;
+
 	procedure Check_Push_Level(Ctx: in out Tree_Reader; Height: in U64;
 					Addr: in Address; Value: in Octets);
 	function Get_Tree_Block_Address(Data: in Bupstash_Types.Octets) return
@@ -59,7 +80,7 @@ private
 	package BL is new Ada.Containers.Vectors(Index_Type => Natural,
 				Element_Type => BD.Vector, "=" => BD."=");
 
-	type Tree_Reader is tagged limited record
+	type Tree_Reader is limited record
 		Tree_Blocks:  BL.Vector;
 		Tree_Heights: HO.Vector;
 		Read_Offsets: HO.Vector;

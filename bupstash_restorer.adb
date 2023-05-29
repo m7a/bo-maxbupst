@@ -1,11 +1,15 @@
 with Ada.Text_IO;
 with Ada.Streams;
 use  Ada.Streams;
+with Ada.Containers;
+with Ada.Containers.Vectors;
 
 with Bupstash_Types;
 use  Bupstash_Types;
 with Bupstash_HTree;
+use  Bupstash_HTree;
 with Bupstash_Index;
+with Bupstash_Crypto;
 
 with Sodium.Functions; -- As_Hexidecimal
 
@@ -45,8 +49,8 @@ package body Bupstash_Restorer is
 		IHK: constant Hash_Key := Key.Derive_Index_Hash_Key;
 		TR:  Bupstash_HTree.Tree_Reader :=
 					Ctx.Init_HTree_Reader_For_Index_Tree;
-		Buffer: Stream_Element_Array(0 .. Stream_Element_Offset(
-						Ctx.Get_Index_Size) - 1);
+		Buffer: constant Stream_Element_Array := Read_And_Decrypt(TR,
+			Data_Directory, IHK, Key.Get_Idx_SK, Key.Get_Idx_PSK);
 
 		-- TODO PRELIMINARY / EXPERIMENTAL. THIS NEEDS TO BE FILLED IN WITH THE ACTUAL IMPLEMENTATION...
 		procedure Begin_Metadata(Meta: in Bupstash_Index.Index_Entry_Meta) is
@@ -82,11 +86,6 @@ package body Bupstash_Restorer is
 		end End_Metadata;
 
 	begin
-		TR.Read_And_Decrypt(Plaintext => Buffer,
-				    Data_Dir  => Data_Directory,
-				    HK        => IHK,
-				    Cnt_SK    => Key.Get_Idx_SK,
-				    Cnt_PSK   => Key.Get_Idx_PSK);
 		Bupstash_Index.Walk(Buffer, Begin_Metadata'Access,
 				Handle_X_Attrs'Access, End_Metadata'Access);
 		--Ada.Text_IO.Put_Line("HTREE COMPLETE");
@@ -94,6 +93,56 @@ package body Bupstash_Restorer is
 		-- TODO NOW ITERATE OVER THE INDEX WITH "INDEX ENTRY TO TARHEADER"
 		--Ada.Text_IO.Put_Line("HTREE TO BUFFER COMPLETE");
 	end Restore_With_Index;
+
+	-- TODO z this routine is rather inefficient. should consider going
+	--        without vectors and stream through the decryption routine
+	--        if possible
+	function Read_And_Decrypt(Ctx:  in out Tree_Reader;
+				Data_Dir:   in String;
+				HK:         in Hash_Key;
+				Cnt_SK:     in SK;
+				Cnt_PSK:    in PSK) return Stream_Element_Array
+	is
+		use Ada.Containers;
+		package SV is new Ada.Containers.Vectors(Index_Type => Natural,
+					Element_Type => Stream_Element);
+
+		TI:       constant Tree_Iterator := Init(Ctx, Data_Dir, HK);
+		Cursor:   Tree_Cursor := TI.First;
+
+		Data_Vec: SV.Vector;
+
+		DCTX:     Bupstash_Crypto.Decryption_Context :=
+					Bupstash_Crypto.New_Decryption_Context(
+					Cnt_SK, Cnt_PSK);
+	begin
+		while Cursor_Has_Element(Cursor) loop
+			declare
+				Chunk: constant Stream_Element_Array :=
+								Element(Cursor);
+			begin
+				SV.Reserve_Capacity(Data_Vec,
+					SV.Length(Data_Vec) + Chunk'Length);
+				for I of Chunk loop
+					SV.Append(Data_Vec, I);
+				end loop;
+			end;
+			Cursor := TI.Next(Cursor);
+		end loop;
+		declare
+			Ciphertext: Stream_Element_Array(0 ..
+				Stream_Element_Offset(SV.Length(Data_Vec)) - 1);
+			I: Stream_Element_Offset := Ciphertext'First;
+			C: SV.Cursor             := SV.First(Data_Vec);
+		begin
+			while I <= Ciphertext'Last loop
+				Ciphertext(I) := SV.Element(C);
+				I             := I + 1;
+				C             := SV.Next(C);
+			end loop;
+			return Bupstash_Crypto.Decrypt_Data(DCTX, Ciphertext);
+		end;
+	end Read_And_Decrypt;
 
 	procedure Restore_Without_Index(Ctx: in Bupstash_Item.Item;
 			Key: in Bupstash_Key.Key; Data_Directory: in String) is
