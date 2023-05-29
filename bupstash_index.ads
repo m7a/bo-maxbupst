@@ -1,6 +1,7 @@
 with Ada.Streams;
 with Bupstash_Types;
 use  Bupstash_Types;
+with Serde;
 
 package Bupstash_Index is
 
@@ -44,5 +45,29 @@ package Bupstash_Index is
 		End_Metadata:   access procedure (Meta: in Index_Entry_Meta;
 						Data: in Index_Entry_Data)
 	);
+
+	generic
+		type Local_Ptr is access all Ada.Streams.Stream_Element_Array;
+	package Traversal is
+		type Index_Iterator is tagged limited private;
+		function Init(Ptr: in Local_Ptr) return Index_Iterator;
+		function Has_Next(It: in Index_Iterator) return Boolean;
+		function Next(It: in out Index_Iterator)
+						return Index_Entry_Meta;
+		function Next_X_Attr_Key(It: in out Index_Iterator)
+							return String;
+		function Next_X_Attr_Value(It: in out Index_Iterator)
+							return String;
+		function Next_Data(It: in out Index_Iterator)
+							return Index_Entry_Data;
+	private
+		package S is new Serde(Local_Ptr);
+		type Index_Iterator is tagged limited record
+			Data:  Local_Ptr;
+			S_Ctx: S.Serde_Ctx;
+		end record;
+		function Get_Next_Meta(It: in out Index_Iterator)
+							return Index_Entry_Meta;
+	end Traversal;
 
 end Bupstash_Index;
