@@ -164,13 +164,6 @@ package body Bupstash_HTree is
 		end return;
 	end Init;
 
-	function Store_64(Num: in U64) return Octets is
-		Ret: Octets(1 .. 8);
-		for Ret'Address use Num'Address;
-	begin
-		return Ret;
-	end Store_64;
-
 	function Pop_Level(Ctx: in out Tree_Reader) return Octets is
 	begin
 		if BL.Is_Empty(Ctx.Tree_Blocks) then

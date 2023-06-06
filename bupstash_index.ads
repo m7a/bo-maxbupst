@@ -37,19 +37,16 @@ package Bupstash_Index is
 		Hash_Val:     Hash;
 	end record;
 
-	procedure Walk(
-		Raw:            in Ada.Streams.Stream_Element_Array;
-		Begin_Metadata: access procedure (Meta: in Index_Entry_Meta);
-		Handle_X_Attrs: access procedure (Meta: in Index_Entry_Meta;
-						K: in String; V: in String);
-		End_Metadata:   access procedure (Meta: in Index_Entry_Meta;
-						Data: in Index_Entry_Data)
-	);
-
+	-- generic for memory pointer lifecycle scope reduction
 	generic
 		type Local_Ptr is access all Ada.Streams.Stream_Element_Array;
 	package Traversal is
 		type Index_Iterator is tagged limited private;
+		-- NB: It is vital to call all the API funcitons in-order and
+		--     only when snesible. It is always the following order:
+		--     Next/check xattrs/Next_Data
+		-- Do not "skip" reading the X_Attrs when present. This
+		-- internally advances the processing of the serde structure!
 		function Init(Ptr: in Local_Ptr) return Index_Iterator;
 		function Has_Next(It: in Index_Iterator) return Boolean;
 		function Next(It: in out Index_Iterator)

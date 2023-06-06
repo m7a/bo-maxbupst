@@ -3,6 +3,9 @@ use  Ada.Streams;
 with Bupstash_Types;
 use  Bupstash_Types;
 
+with Interfaces;
+use  Interfaces;
+
 package body Serde is
 
 	function Init(Raw: Ptr) return Serde_Ctx is

@@ -44,12 +44,16 @@ package Bupstash_Types is
 	-- https://gcc.gnu.org/bugzilla/show_bug.cgi?id=15939
 	-- type U64 is range 0..2**64-1;
 	-- type U64 is mod 2**64;
-	type U64 is new Interfaces.Unsigned_64;
+	subtype U64 is Interfaces.Unsigned_64;
 
 	Address_Null: constant Address := (others => Character'Val(0));
 
-	function Shift_Left(I: in U64; N: in Natural) return U64 is
-		(U64(Interfaces.Shift_Left(Interfaces.Unsigned_64(I), N)));
+	--function Shift_Left(I: in U64; N: in Natural) return U64 renames
+	--						Interfaces.Shift_Left;
+	--function Shift_Left(I: in U64; N: in Natural) return U64 is
+	--	(U64(Interfaces.Shift_Left(Interfaces.Unsigned_64(I), N)));
+
+	function Store_64(Num: in U64) return Octets;
 
 	--type UInt is new Interfaces.Unsigned_32;
 	--function Shift_Left(I: in UInt; N: in Natural) return UInt is
@@ -57,5 +61,14 @@ package Bupstash_Types is
 
 	function Octets_To_Address(O: in Octets)
 			return Address with Pre => O'Length = Address_Length;
+
+	function String_To_Octets(S: in String) return Octets;
+
+	function "="(A, B: in U64)   return Boolean renames Interfaces."=";
+	function "<"(A, B: in U64)   return Boolean renames Interfaces."<";
+	function "+"(A, B: in U64)   return U64     renames Interfaces."+";
+	function "-"(A, B: in U64)   return U64     renames Interfaces."-";
+	--function "or"(A, B: in U64)  return U64     renames Interfaces."or";
+	function "and"(A, B: in U64) return U64     renames Interfaces."and";
 
 end Bupstash_Types;

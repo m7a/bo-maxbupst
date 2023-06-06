@@ -1,4 +1,5 @@
 with Ada.Text_IO;
+with Ada.Text_IO.Text_Streams;
 with Ada.Streams;
 use  Ada.Streams;
 with Ada.Containers;
@@ -9,7 +10,10 @@ use  Bupstash_Types;
 with Bupstash_HTree;
 use  Bupstash_HTree;
 with Bupstash_Index;
+use  Bupstash_Index;
 with Bupstash_Crypto;
+
+with Tar_Writer;
 
 with Sodium.Functions; -- As_Hexidecimal
 
@@ -46,52 +50,70 @@ package body Bupstash_Restorer is
 
 	procedure Restore_With_Index(Ctx: in Bupstash_Item.Item;
 			Key: in Bupstash_Key.Key; Data_Directory: in String) is
-		IHK: constant Hash_Key := Key.Derive_Index_Hash_Key;
-		TR:  Bupstash_HTree.Tree_Reader :=
+
+		Stdout: constant access Root_Stream_Type'Class :=
+						Ada.Text_IO.Text_Streams.Stream(
+						Ada.Text_IO.Standard_Output);
+
+		Index_Reader: Tree_Reader := 
 					Ctx.Init_HTree_Reader_For_Index_Tree;
-		Buffer: constant Stream_Element_Array := Read_And_Decrypt(TR,
-			Data_Directory, IHK, Key.Get_Idx_SK, Key.Get_Idx_PSK);
+		Index_Buffer: aliased Stream_Element_Array :=
+			Read_And_Decrypt(Index_Reader, Data_Directory,
+				Key.Derive_Index_Hash_Key, Key.Get_Idx_SK,
+				Key.Get_Idx_PSK);
 
-		-- TODO PRELIMINARY / EXPERIMENTAL. THIS NEEDS TO BE FILLED IN WITH THE ACTUAL IMPLEMENTATION...
-		procedure Begin_Metadata(Meta: in Bupstash_Index.Index_Entry_Meta) is
-		begin
-			Ada.Text_IO.Put_Line("begin metadata");
-			Ada.Text_IO.Put_Line("  Path = " & Meta.Path);
-			Ada.Text_IO.Put_Line("  Mode = " & U64'Image(Meta.Mode));
-			Ada.Text_IO.Put_Line("  Size = " & U64'Image(Meta.Size));
-			Ada.Text_IO.Put_Line("  UID  = " & U64'Image(Meta.UID));
-			Ada.Text_IO.Put_Line("  GID  = " & U64'Image(Meta.GID));
-			-- M_Time:      U64;
-			-- M_Time_NS:   U64;
-			-- C_Time:      U64;
-			-- C_Time_NS:   U64;
-			-- Norm_Dev:    U64;
-			-- Ino:         U64;
-			-- N_Link:      U64;
-			-- Link_Target_Present: Boolean;
-			-- Link_Target: String(1 .. LL); -- Option<String>
-			-- Dev_Major:   U64;
-			-- Dev_Minor:   U64;
-			-- Num_X_Attrs: U64;
-		end Begin_Metadata;
+		type Local_Ptr is access all Stream_Element_Array;
+		package IT is new Bupstash_Index.Traversal(Local_Ptr);
+		Index_Iter: IT.Index_Iterator := IT.Init(Index_Buffer'Access);
 
-		procedure Handle_X_Attrs(Meta: in Bupstash_Index.Index_Entry_Meta; K: in String; V: in String) is
-		begin
-			Ada.Text_IO.Put_Line("  xattrs k=<" & K & "> v=<" & Sodium.Functions.As_Hexidecimal(V) & ">");
-		end Handle_X_Attrs;
-
-		procedure End_Metadata(Meta: in Bupstash_Index.Index_Entry_Meta; Data: in Bupstash_Index.Index_Entry_Data) is
-		begin
-			Ada.Text_IO.Put_Line("end metadta");
-		end End_Metadata;
-
+		Data_Reader: Tree_Reader := Ctx.Init_HTree_Reader_For_Data_Tree;
+		-- TODO CSTAT SEEMS THIS ONE DOES NOT WORK / TRIES TO READ FROM WRONG FILE NAME! WHAT DOES CRYPTO SAY: ARE WE USING THE CORRECT KEYS HERE?
+		--Data_Iter: Tree_Iterator := Init(Data_Reader, Data_Directory,
+		--				Key.Derive_Data_Hash_Key);
 	begin
-		Bupstash_Index.Walk(Buffer, Begin_Metadata'Access,
-				Handle_X_Attrs'Access, End_Metadata'Access);
-		--Ada.Text_IO.Put_Line("HTREE COMPLETE");
+
+		while Index_Iter.Has_Next loop
+			declare
+				CM: Index_Entry_Meta := Index_Iter.Next;
+				Tar: Tar_Writer.Tar_Entry := Tar_Writer.
+							Init_Entry(CM.Path);
+			begin
+				-- TODO LINK HANDLING IS WRONG FOR NOW
+				Tar.Set_Access_Mode(Tar_Writer.Access_Mode(
+					Tar_Writer."and"(CM.Mode, 8#7777#)));
+				Tar.Set_Size(CM.Size);
+				Tar.Set_Modification_Time(CM.M_Time);
+				Tar.Set_Owner(CM.UID, CM.GID);
+				if CM.Link_Target_Present then
+					Tar.Set_Link_Target(CM.Link_Target);
+				end if;
+				Tar.Set_Device(
+					Tar_Writer.Dev_Node(CM.Dev_Major),
+					Tar_Writer.Dev_Node(CM.Dev_Minor)
+				);
+
+				for I in 1 .. CM.Num_X_Attrs loop
+					Tar.Add_X_Attr(
+						Index_Iter.Next_X_Attr_Key,
+						Index_Iter.Next_X_Attr_Value
+					);
+				end loop;
+
+				Stdout.Write(Tar.Begin_Entry);
+
+				-- TODO NOW ITERATE OVER THE INDEX WITH "INDEX ENTRY TO TARHEADER"
+				declare
+					D: constant Index_Entry_Data :=
+							Index_Iter.Next_Data;
+				begin
+					-- TODO PROC
+					Stdout.Write((16#0a#, 16#0a#));
+				end;
+				Stdout.Write(Tar.End_Entry);
+			end;
+		end loop;
+		Stdout.Write(Tar_Writer.End_Tar);
 		--Hexdump_Quick(Buffer);
-		-- TODO NOW ITERATE OVER THE INDEX WITH "INDEX ENTRY TO TARHEADER"
-		--Ada.Text_IO.Put_Line("HTREE TO BUFFER COMPLETE");
 	end Restore_With_Index;
 
 	-- TODO z this routine is rather inefficient. should consider going

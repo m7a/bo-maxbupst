@@ -13,14 +13,15 @@ package Bupstash_Item is
 	function Init(Key: in Bupstash_Key.Key; Item_File: in String)
 								return Item;
 	procedure Print(Ctx: in Item);
-
 	function Has_XID(Ctx: in Item; Cmp: in Bupstash_Types.XID)
 								return Boolean;
-
 	function Has_Index_Tree(Ctx: in Item) return Boolean;
+	function Get_Index_Size(Ctx: in Item) return Bupstash_Types.U64;
+
 	function Init_HTree_Reader_For_Index_Tree(Ctx: in Item) return
 						Bupstash_HTree.Tree_Reader;
-	function Get_Index_Size(Ctx: in Item) return Bupstash_Types.U64;
+	function Init_HTree_Reader_For_Data_Tree(Ctx: in Item) return
+						Bupstash_HTree.Tree_Reader;
 
 private
 
@@ -96,5 +97,8 @@ private
 					Ret: out V3_Secret_Item_Metadata);
 
 	procedure Print(Ctx: in H_Tree_Metadata);
+
+	function Init_HTree_Reader_For_Meta(M: in H_Tree_Metadata) return
+						Bupstash_HTree.Tree_Reader;
 
 end Bupstash_Item;

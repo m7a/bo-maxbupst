@@ -37,6 +37,10 @@ package Tar_Writer is
 
 	function End_Tar return Stream_Element_Array;
 
+	function "="(A, B: in U64)   return Boolean renames Interfaces."=";
+	function "+"(A, B: in U64)   return U64     renames Interfaces."+";
+	function "and"(A, B: in U64) return U64     renames Interfaces."and";
+
 private
 
 	package String_Ordered_Maps is new Ada.Containers.

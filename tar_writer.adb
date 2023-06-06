@@ -14,7 +14,7 @@ package body Tar_Writer is
 	begin
 		if Force_USTAR_Format and not Is_USTAR_Valid then
 			raise Not_Supported_In_Format with "File name cannot " &
-					"be represented in USTAR format.";
+					"be represented in USTAR format";
 		end if;
 		return RV: Tar_Entry := (Force_USTAR => Force_USTAR_Format,
 								others => <>) do
@@ -33,6 +33,11 @@ package body Tar_Writer is
 	begin
 		if not Is_ASCII(Name) or Name'Length > 255 then
 			return False;
+		end if;
+
+		-- no split necessary for <= 100 chars file name length
+		if Name'Length <= USTAR_Length_Name then
+			return True;
 		end if;
 
 		for I in Name'Range loop
@@ -130,8 +135,9 @@ package body Tar_Writer is
 					 Stream_Element(Character'Pos('6')),
 					 Stream_Element(Character'Pos('7')));
 		Edit: U64 := Val;
-		Pos:  Stream_Element_Offset := Length;
-		RV:   Stream_Element_Array(0 .. Length) := (others => Tbl(0));
+		Pos:  Stream_Element_Offset := Length - 1;
+		RV:   Stream_Element_Array(0 .. Length - 1)
+							:= (others => Tbl(0));
 	begin
 		Overflow := False;
 		while Pos > 0 and Edit /= 0 loop
@@ -182,7 +188,7 @@ package body Tar_Writer is
 			Buf(Idx) := Tbl(Tbl'First + Integer(Edit mod 10));
 			Edit     := Edit / 10;
 			Idx      := Idx - 1;
-			exit when Val = 0;
+			exit when Idx = 0;
 		end loop;
 		return Buf;
 	end U64_To_Str;

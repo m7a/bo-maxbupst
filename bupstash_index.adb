@@ -5,45 +5,6 @@ use  Ada.Assertions;
 
 package body Bupstash_Index is
 
-	-- TODO X OBSOLETE FUNCTION MAY BE UP FOR REMOVAL ONCE IMPLEMENTATION GOES TO TRAVERSAL DIRECTLY
-	procedure Walk(
-		Raw:            in Ada.Streams.Stream_Element_Array;
-		Begin_Metadata: access procedure (Meta: in Index_Entry_Meta);
-		Handle_X_Attrs: access procedure (Meta: in Index_Entry_Meta;
-						K: in String; V: in String);
-		End_Metadata:   access procedure (Meta: in Index_Entry_Meta;
-						Data: in Index_Entry_Data)
-	) is
-		type Local_Ptr is access all Stream_Element_Array;
-		package Trav is new Traversal(Local_Ptr);
-		use Trav;
-		Raw_Aliased: aliased Stream_Element_Array := Raw;
-
-		Ctx: Index_Iterator := Init(Raw_Aliased'Access);
-	begin
-		while Ctx.Has_Next loop
-			declare
-				Ent: constant Index_Entry_Meta := Ctx.Next;
-			begin
-				Begin_Metadata(Ent);
-				for I in 1 .. Ent.Num_X_Attrs loop
-					Handle_X_Attrs(
-						Ent,
-						Ctx.Next_X_Attr_Key,
-						Ctx.Next_X_Attr_Value
-					);
-				end loop;
-				declare
-					Dat: constant Index_Entry_Data :=
-								Ctx.Next_Data;
-				begin
-					End_Metadata(Ent, Dat);
-				end;
-			end;
-		end loop;
-	end Walk;
-
-	-- Alternative API
 	package body Traversal is
 
 		function Init(Ptr: in Local_Ptr) return Index_Iterator is

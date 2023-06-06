@@ -228,13 +228,19 @@ package body Bupstash_Item is
 	function Has_Index_Tree(Ctx: in Item) return Boolean is
 						(Ctx.Plain.Has_Index_Tree);
 
-	function Init_HTree_Reader_For_Index_Tree(Ctx: in Item) return
-						Bupstash_HTree.Tree_Reader is
-		(Bupstash_HTree.Init(Ctx.Plain.Index_Tree.Height,
-					Ctx.Plain.Index_Tree.Data_Chunk_Count,
-					Ctx.Plain.Index_Tree.Address));
-
 	function Get_Index_Size(Ctx: in Item) return Bupstash_Types.U64 is
 						(Ctx.Decrypted.Index_Size);
+
+	function Init_HTree_Reader_For_Index_Tree(Ctx: in Item) return
+						Bupstash_HTree.Tree_Reader is
+		(Init_HTree_Reader_For_Meta(Ctx.Plain.Index_Tree));
+
+	function Init_HTree_Reader_For_Meta(M: in H_Tree_Metadata) return
+						Bupstash_HTree.Tree_Reader is
+		(Bupstash_HTree.Init(M.Height, M.Data_Chunk_Count, M.Address));
+
+	function Init_HTree_Reader_For_Data_Tree(Ctx: in Item) return
+						Bupstash_HTree.Tree_Reader is
+		(Init_HTree_Reader_For_Meta(Ctx.Plain.Data_Tree));
 
 end Bupstash_Item;

@@ -86,7 +86,6 @@ private
 		Read_Offsets: HO.Vector;
 	end record;
 
-	function Store_64(Num: in U64) return Octets;
 	function Vector_To_Octets(Vec: in BD.Vector) return Octets;
 
 	generic
