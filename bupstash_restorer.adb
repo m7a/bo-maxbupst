@@ -67,9 +67,8 @@ package body Bupstash_Restorer is
 		Index_Iter: IT.Index_Iterator := IT.Init(Index_Buffer'Access);
 
 		Data_Reader: Tree_Reader := Ctx.Init_HTree_Reader_For_Data_Tree;
-		-- TODO CSTAT SEEMS THIS ONE DOES NOT WORK / TRIES TO READ FROM WRONG FILE NAME! WHAT DOES CRYPTO SAY: ARE WE USING THE CORRECT KEYS HERE?
-		--Data_Iter: Tree_Iterator := Init(Data_Reader, Data_Directory,
-		--				Key.Derive_Data_Hash_Key);
+		Data_Iter: Tree_Iterator := Init(Data_Reader, Data_Directory,
+						Key.Derive_Data_Hash_Key);
 	begin
 
 		while Index_Iter.Has_Next loop
@@ -106,7 +105,7 @@ package body Bupstash_Restorer is
 					D: constant Index_Entry_Data :=
 							Index_Iter.Next_Data;
 				begin
-					-- TODO PROC
+					-- TODO EXTRACT CONTENT SIMILAR TO READ_AND_DECRYPT ROUTINE EXCEPT WE MIGHT WANT TO USE BUFFERING SCHEME AS PER cOPY OUT AND HASH ROUTINE!
 					Stdout.Write((16#0a#, 16#0a#));
 				end;
 				Stdout.Write(Tar.End_Entry);

@@ -1,6 +1,7 @@
 with Interfaces;
 
 with Sodium.Thin_Binding;
+with Ada.Streams;
 
 package Bupstash_Types is
 
@@ -61,6 +62,9 @@ package Bupstash_Types is
 
 	function Octets_To_Address(O: in Octets)
 			return Address with Pre => O'Length = Address_Length;
+
+	--function Stream_Element_Array_To_Octets(
+	--		A: in Ada.Streams.Stream_Element_Array) return Octets;
 
 	function String_To_Octets(S: in String) return Octets;
 

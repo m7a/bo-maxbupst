@@ -60,8 +60,9 @@ package body Bupstash_HTree is
 			if Opt.Is_Present then 
 				-- indentation exceeded
 				Check_Push_Level(Ctx, Opt.Height - 1, Opt.Addr,
-				Bupstash_Compression.Unauthenticated_Decompress(
-				Get_Chunk(Data_Directory, Opt.Addr))); 
+					Bupstash_Compression.
+					Unauthenticated_Decompress(
+					Get_Chunk(Data_Directory, Opt.Addr))); 
 			end if;
 		end Try_Tree_Traversal;
 	begin
@@ -92,12 +93,12 @@ package body Bupstash_HTree is
 				As_Hexidecimal(Addr) & " but data indicates " &
 				Sodium.Functions.As_Hexidecimal(CMP);
 		end if;
-		Push_Level(Ctx, Height - 1, Value);
+		Push_Level(Ctx, Height, Value);
 	end Check_Push_Level;
 
 	-- htree::tree_block_address
 	function Get_Tree_Block_Address(Data: in Octets) return Address is
-		Data_Conv: String(Data'Range);
+		Data_Conv: String(1 .. Data'Length);
 		for Data_Conv'Address use Data'Address;
 		Ctx: Blake3.Hasher := Blake3.Init;
 	begin
@@ -145,7 +146,7 @@ package body Bupstash_HTree is
 	function Init(Level: in U64; Data_Chunk_Count: in U64;
 					Addr: in Address) return Tree_Reader is
 		Initial_Block: BD.Vector;
-		Data_Chunk_O: constant Octets  := Store_64(Data_Chunk_Count);
+		Data_Chunk_O: constant Octets := Store_64(Data_Chunk_Count);
 	begin
 		BD.Reserve_Capacity(Initial_Block, Addr'Length +
 							Data_Chunk_O'Length);
@@ -241,12 +242,6 @@ package body Bupstash_HTree is
 		end if;
 		declare
 			Required_Len: constant U64 := U64(8 + Address_Length);
-
-			procedure Update_Read_Offset(Offset: in out U64) is
-			begin
-				Offset := Offset + Required_Len;
-			end Update_Read_Offset;
-
 			Data: constant BD.Vector := BL.Last_Element(
 							Ctx.Tree_Blocks);
 			Read_Offset_C: constant HO.Cursor := HO.Last(
@@ -256,16 +251,16 @@ package body Bupstash_HTree is
 				Is_Present => True,
 				Height     => HO.Last_Element(Ctx.Tree_Heights),
 				Addr       => Address_Slice_Vector(Data,
-								Read_Offset)
+								Read_Offset + 8)
 			);
 		begin
 			if U64(BD.Length(Data)) - Read_Offset =
 							Required_Len then
 				Pop_Level(Ctx);
 			else
-				HO.Update_Element(Ctx.Read_Offsets,
+				HO.Replace_Element(Ctx.Read_Offsets,
 						Read_Offset_C,
-						Update_Read_Offset'Access);
+						Read_Offset + Required_Len);
 			end if;
 			return Ret;
 		end;
