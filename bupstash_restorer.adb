@@ -1,5 +1,4 @@
 with Ada.Text_IO;
-with Ada.Text_IO.Text_Streams;
 with Ada.Streams;
 use  Ada.Streams;
 with Ada.Containers;
@@ -12,6 +11,8 @@ with Bupstash_HTree_Iter;
 use  Bupstash_HTree_Iter;
 with Bupstash_Index;
 use  Bupstash_Index;
+with Bupstash_XTar;
+use  Bupstash_XTar;
 
 with Tar_Writer;
 
@@ -30,31 +31,10 @@ package body Bupstash_Restorer is
 		end if;
 	end Restore;
 
-	--procedure Hexdump_Quick(Data: in Stream_Element_Array) is
-	--	Str: String(1 .. Data'Length);
-	--	for Str'Address use Data'Address;
-
-	--	I: Integer := Str'First;
-	--	Hex: String (1 .. 2);
-	--begin
-	--	while I <= Str'Last loop
-	--		Hex := Sodium.Functions.As_Hexidecimal(Str(I .. I));
-	--		if Hex'Length = 1 then
-	--			Ada.Text_IO.Put("\x0" & Hex);
-	--		else
-	--			Ada.Text_IO.Put("\x" & Hex);
-	--		end if;
-	--		I := I + 1;
-	--	end loop;
-	--	Ada.Text_IO.New_Line;
-	--end Hexdump_Quick;
-
 	procedure Restore_With_Index(Ctx: in Bupstash_Item.Item;
 			Key: in Bupstash_Key.Key; Data_Directory: in String) is
 
-		Stdout: constant access Root_Stream_Type'Class :=
-						Ada.Text_IO.Text_Streams.Stream(
-						Ada.Text_IO.Standard_Output);
+		XTar: XTar_Ctx := Bupstash_XTar.Init;
 
 		Index_Tree_LL: Tree_Reader := 
 					Ctx.Init_HTree_Reader_For_Index_Tree;
@@ -93,8 +73,7 @@ package body Bupstash_Restorer is
 				Data_Str: String(1 .. Use_Data'Length);
 				for Data_Str'Address use Use_Data'Address;
 			begin
-				--Hexdump_Quick(Use_Data);
-				Stdout.Write(Tar.Add_Content(Use_Data));
+				XTar.Add_Content(Tar, Use_Data);
 				if Data_Str'Length > 0 then
 					HCTX.Update(Data_Str);
 				end if;
@@ -128,32 +107,17 @@ package body Bupstash_Restorer is
 			procedure Process_Next_Meta_Entry is
 				CM: Index_Entry_Meta := Index_Iter.Next;
 				Tar: Tar_Writer.Tar_Entry :=
-						Tar_Writer.Init_Entry(CM.Path);
+					XTar.Begin_Entry_From_Metadata(CM);
 			begin
-				-- TODO LINK HANDLING IS WRONG FOR NOW
-				Tar.Set_Access_Mode(Tar_Writer.Access_Mode(
-					Tar_Writer."and"(CM.Mode, 8#7777#)));
-				Tar.Set_Size(CM.Size);
-				Tar.Set_Modification_Time(CM.M_Time);
-				Tar.Set_Owner(CM.UID, CM.GID);
-				if CM.Link_Target_Present then
-					Tar.Set_Link_Target(CM.Link_Target);
-				end if;
-				Tar.Set_Device(
-					Tar_Writer.Dev_Node(CM.Dev_Major),
-					Tar_Writer.Dev_Node(CM.Dev_Minor)
-				);
-
 				for I in 1 .. CM.Num_X_Attrs loop
 					Tar.Add_X_Attr(
 						Index_Iter.Next_X_Attr_Key,
 						Index_Iter.Next_X_Attr_Value
 					);
 				end loop;
-
-				Stdout.Write(Tar.Begin_Entry);
+				XTar.Begin_Entry(Tar);
 				Write_Data(Tar, Index_Iter.Next_Data, CM.Size);
-				Stdout.Write(Tar.End_Entry);
+				XTar.End_Entry(Tar);
 			end Process_Next_Meta_Entry;
 		begin
 			while Index_Iter.Has_Next loop
@@ -166,7 +130,7 @@ package body Bupstash_Restorer is
 	begin
 		For_Plaintext_Chunks(Index_PT_Iter, Index_Tree_Iter,
 					Index_DCTX, Process_Index_Chunk'Access);
-		Stdout.Write(Tar_Writer.End_Tar);
+		XTar.End_Tar;
 	end Restore_With_Index;
 
 	procedure For_Plaintext_Chunks(C1: in out Iter_Context;
