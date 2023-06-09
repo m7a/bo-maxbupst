@@ -7,6 +7,7 @@ with LZ4Ada;
 use  Lz4Ada;
 
 with Sodium.Functions;
+with Bupstash_Types;
 
 package body Bupstash_Compression is
 
@@ -75,9 +76,7 @@ package body Bupstash_Compression is
 	end UNLZ4;
 
 	function Unauthenticated_Decompress(Raw: in Stream_Element_Array)
-						return Bupstash_Types.Octets is
-		Ret: Bupstash_Types.Octets(0 .. Raw'Length - 2);
-		for Ret'Address use Raw'Address;
+						return Stream_Element_Array is
 	begin
 		if Raw(Raw'Last) /= Stream_Element(
 		Bupstash_Types.Compress_Footer_No_Compression) then
@@ -89,7 +88,7 @@ package body Bupstash_Compression is
 				Bupstash_Types.U8'Image(
 				Bupstash_Types.Compress_Footer_No_Compression);
 		end if;
-		return Ret;
+		return Raw(Raw'First .. Raw'Last - 1);
 	end Unauthenticated_Decompress;
 
 end Bupstash_Compression;

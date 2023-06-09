@@ -1,7 +1,7 @@
 with Bupstash_Key;
 with Bupstash_Item;
 with Bupstash_Types;
-with Bupstash_HTree;
+with Bupstash_HTree_LL;
 with Ada.Streams;
 
 package Bupstash_Restorer is
@@ -16,7 +16,7 @@ private
 	procedure Restore_Without_Index(Ctx: in Bupstash_Item.Item;
 			Key: in Bupstash_Key.Key; Data_Directory: in String);
 
-	function Read_And_Decrypt(Ctx:  in out Bupstash_HTree.Tree_Reader;
+	function Read_And_Decrypt(Ctx:  in out Bupstash_HTree_LL.Tree_Reader;
 				Data_Dir:   in String;
 				HK:         in Bupstash_Types.Hash_Key;
 				Cnt_SK:     in Bupstash_Types.SK;

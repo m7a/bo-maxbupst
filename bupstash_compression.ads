@@ -1,5 +1,4 @@
 with Ada.Streams;
-with Bupstash_Types;
 with LZ4Ada;
 with Interfaces;
 
@@ -12,7 +11,7 @@ package Bupstash_Compression is
 	-- the provided input buffer.
 	function Unauthenticated_Decompress(
 				Raw: in Ada.Streams.Stream_Element_Array)
-				return Bupstash_Types.Octets;
+				return Ada.Streams.Stream_Element_Array;
 
 private
 

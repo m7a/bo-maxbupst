@@ -5,12 +5,20 @@ package body Bupstash_Types is
 
 	-- TODO SHOULD MAYBE MAKE USE OF GENERICS FOR THESE IMPLEMENTATIONS
 
-	function Octets_To_Address(O: in Octets) return Address is
+	function Stream_Element_Array_To_Address(A: in Stream_Element_Array)
+							return Address is
 		A_Ret: Address;
-		for A_Ret'Address use O'Address;
+		for A_Ret'Address use A'Address;
 	begin
 		return A_Ret;
-	end Octets_To_Address;
+	end Stream_Element_Array_To_Address;
+
+	--function Octets_To_Address(O: in Octets) return Address is
+	--	A_Ret: Address;
+	--	for A_Ret'Address use O'Address;
+	--begin
+	--	return A_Ret;
+	--end Octets_To_Address;
 
 	function Store_64(Num: in U64) return Octets is
 		Ret: Octets(1 .. 8);

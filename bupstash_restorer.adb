@@ -7,8 +7,10 @@ with Ada.Containers.Vectors;
 
 with Bupstash_Types;
 use  Bupstash_Types;
-with Bupstash_HTree;
-use  Bupstash_HTree;
+with Bupstash_HTree_LL;
+use  Bupstash_HTree_LL;
+with Bupstash_HTree_Iter;
+use  Bupstash_HTree_Iter;
 with Bupstash_Index;
 use  Bupstash_Index;
 with Bupstash_Crypto;

@@ -54,14 +54,18 @@ package Bupstash_Types is
 	--function Shift_Left(I: in U64; N: in Natural) return U64 is
 	--	(U64(Interfaces.Shift_Left(Interfaces.Unsigned_64(I), N)));
 
-	function Store_64(Num: in U64) return Octets;
+	--function Store_64(Num: in U64) return Octets;
 
 	--type UInt is new Interfaces.Unsigned_32;
 	--function Shift_Left(I: in UInt; N: in Natural) return UInt is
 	--	(UInt(Interfaces.Shift_Left(Interfaces.Unsigned_32(I), N)));
 
-	function Octets_To_Address(O: in Octets)
-			return Address with Pre => O'Length = Address_Length;
+	--function Octets_To_Address(O: in Octets)
+	--		return Address with Pre => O'Length = Address_Length;
+
+	function Stream_Element_Array_To_Address(
+			A: in Ada.Streams.Stream_Element_Array)
+			return Address with Pre => A'Length = Address_Length;
 
 	--function Stream_Element_Array_To_Octets(
 	--		A: in Ada.Streams.Stream_Element_Array) return Octets;

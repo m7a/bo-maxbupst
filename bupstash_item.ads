@@ -4,7 +4,7 @@ with Ada.Containers.Indefinite_Ordered_Maps;
 
 with Bupstash_Key;
 with Bupstash_Types;
-with Bupstash_HTree;
+with Bupstash_HTree_LL;
 
 package Bupstash_Item is
 
@@ -19,9 +19,9 @@ package Bupstash_Item is
 	function Get_Index_Size(Ctx: in Item) return Bupstash_Types.U64;
 
 	function Init_HTree_Reader_For_Index_Tree(Ctx: in Item) return
-						Bupstash_HTree.Tree_Reader;
+						Bupstash_HTree_LL.Tree_Reader;
 	function Init_HTree_Reader_For_Data_Tree(Ctx: in Item) return
-						Bupstash_HTree.Tree_Reader;
+						Bupstash_HTree_LL.Tree_Reader;
 
 private
 
@@ -99,6 +99,6 @@ private
 	procedure Print(Ctx: in H_Tree_Metadata);
 
 	function Init_HTree_Reader_For_Meta(M: in H_Tree_Metadata) return
-						Bupstash_HTree.Tree_Reader;
+						Bupstash_HTree_LL.Tree_Reader;
 
 end Bupstash_Item;
