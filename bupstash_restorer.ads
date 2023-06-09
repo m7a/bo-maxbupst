@@ -1,9 +1,7 @@
 with Bupstash_Key;
 with Bupstash_Item;
-with Bupstash_Types;
 with Bupstash_Crypto;
 with Bupstash_HTree_Iter;
-with Bupstash_HTree_LL;
 with Ada.Streams;
 with Ada.Containers.Indefinite_Holders;
 
@@ -18,13 +16,6 @@ private
 			Key: in Bupstash_Key.Key; Data_Directory: in String);
 	procedure Restore_Without_Index(Ctx: in Bupstash_Item.Item;
 			Key: in Bupstash_Key.Key; Data_Directory: in String);
-
-	function Read_And_Decrypt(Ctx:  in out Bupstash_HTree_LL.Tree_Reader;
-				Data_Dir:   in String;
-				HK:         in Bupstash_Types.Hash_Key;
-				Cnt_SK:     in Bupstash_Types.SK;
-				Cnt_PSK:    in Bupstash_Types.PSK)
-				return Ada.Streams.Stream_Element_Array;
 
 	-- SAH := Stream Element Array Holder
 	package SAH is new Ada.Containers.Indefinite_Holders(
