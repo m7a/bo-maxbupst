@@ -29,9 +29,6 @@ package Bupstash_HTree_LL is
 
 private
 
-	Null_Stream_Element_Array: constant Stream_Element_Array (1 .. 0) :=
-								(others => 0);
-
 	-- Height and Offset Vectors
 	package HO is new Ada.Containers.Vectors(Index_Type => Natural,
 					Element_Type => U64);

@@ -40,7 +40,10 @@ package Bupstash_Types is
 	Compress_Footer_No_Compression: constant U8 := 0;
 	Compress_Footer_LZ4_Compressed: constant U8 := 1;
 
-	Null_Octets: constant Octets(1 .. 0) := (others => 0);
+	--Null_Octets: constant Octets(1 .. 0) := (others => 0);
+
+	Null_Stream_Element_Array: constant
+		Ada.Streams.Stream_Element_Array(1 .. 0) := (others => 0);
 
 	-- https://gcc.gnu.org/bugzilla/show_bug.cgi?id=15939
 	-- type U64 is range 0..2**64-1;
@@ -74,6 +77,7 @@ package Bupstash_Types is
 
 	function "="(A, B: in U64)   return Boolean renames Interfaces."=";
 	function "<"(A, B: in U64)   return Boolean renames Interfaces."<";
+	function ">"(A, B: in U64)   return Boolean renames Interfaces.">";
 	function "+"(A, B: in U64)   return U64     renames Interfaces."+";
 	function "-"(A, B: in U64)   return U64     renames Interfaces."-";
 	--function "or"(A, B: in U64)  return U64     renames Interfaces."or";

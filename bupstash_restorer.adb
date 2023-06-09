@@ -13,11 +13,11 @@ with Bupstash_HTree_Iter;
 use  Bupstash_HTree_Iter;
 with Bupstash_Index;
 use  Bupstash_Index;
-with Bupstash_Crypto;
 
 with Tar_Writer;
 
 with Sodium.Functions; -- As_Hexidecimal
+with Blake3;
 
 package body Bupstash_Restorer is
 
@@ -68,32 +68,58 @@ package body Bupstash_Restorer is
 		package IT is new Bupstash_Index.Traversal(Local_Ptr);
 		Index_Iter: IT.Index_Iterator := IT.Init(Index_Buffer'Access);
 
-		Data_Reader: Tree_Reader := Ctx.Init_HTree_Reader_For_Data_Tree;
-		--Data_Iter: Tree_Iterator := Init(Data_Reader, Data_Directory,
-		--				Key.Derive_Data_Hash_Key);
-		-- TODO LOADS ENTIRE BACKUP INTO MEMORY. JUST FOR TESTING!
-		Test_All_Data: constant Stream_Element_Array :=
-			Read_And_Decrypt(Data_Reader, Data_Directory,
-			Key.Derive_Data_Hash_Key, Key.Get_Data_SK,
-			Key.Get_Data_PSK);
-		Test_Data_Cursor: Stream_Element_Offset :=
-			Test_All_Data'First;
-
+		Data_Tree_LL: Tree_Reader :=
+				Ctx.Init_HTree_Reader_For_Data_Tree;
+		Data_Tree_Iter: Tree_Iterator := Init(Data_Tree_LL,
+				Data_Directory, Key.Derive_Data_Hash_Key);
+		Data_DCTX: Bupstash_Crypto.Decryption_Context :=
+				Bupstash_Crypto.New_Decryption_Context(
+				Key.Get_Data_SK, Key.Get_Data_PSK);
+		Data_Plaintext_Iter: Iter_Context := (others => <>);
+	
 		procedure Write_Data(Tar: in out Tar_Writer.Tar_Entry;
 				D: in Index_Entry_Data; Ent_SIze: in U64) is
+
+			Remaining: U64           := Ent_Size;
+			HCTX:      Blake3.Hasher := Blake3.Init;
+			Computed:  Hash;
+
+			function Write_Data_Inner(Raw: in Stream_Element_Array;
+						Continue_Proc: out Boolean)
+						return Stream_Element_Offset is
+				Proc_Now: U64 := U64'Min(Remaining,
+							U64(Raw'Length));
+				Use_Data: constant Stream_Element_Array :=
+						Raw(Raw'First .. Raw'First +
+						Stream_Element_Offset(Proc_Now)
+						- 1);
+				Data_Str: String(1 .. Use_Data'Length);
+				for Data_Str'Address use Use_Data'Address;
+			begin
+				-- TODO MISSING THE HASHING!
+				Hexdump_Quick(Use_Data);
+				--Stdout.Write(PT(PT'First .. PT'First +
+				--	Stream_Element_Offset(Proc_Now) - 1));
+				if Data_Str'Length > 0 then
+					HCTX.Update(Data_Str);
+				end if;
+
+				Remaining     := Remaining - Proc_Now;
+				Continue_Proc := Remaining > 0;
+				return Stream_Element_Offset(Proc_Now);
+			end Write_Data_Inner;
+
 		begin
-			-- TODO ALSO MISSING THE HASH COMPUTATION HERE
-			--Stdout.Write(Test_All_Data(Test_Data_Cursor ..
-			--	Test_Data_Cursor +
-			--	Stream_Element_Offset(Ent_Size) - 1));
-			Hexdump_Quick(Test_All_Data(Test_Data_Cursor ..
-				Test_Data_Cursor +
-				Stream_Element_Offset(Ent_Size) - 1));
-			Test_Data_Cursor := Test_Data_Cursor +
-				Stream_Element_Offset(Ent_Size);
-			--Ada.Text_IO.Put_Line("");
-			--Ada.Text_IO.Put_Line("INDEX ENTRY DATA chunk_delta=" & U64'Image(D.Cursor.Chunk_Delta) & ", start_byte_offset=" & U64'Image(D.Cursor.Start_Byte_Offset) & ", end_Byte_offset=" & U64'Image(D.Cursor.End_Byte_Offset) & " ent.size=" & U64'Image(Ent_Size));
-			--Stdout.Write((16#0a#, 16#0a#));
+			For_Plaintext_Chunks(Data_Plaintext_Iter,
+						Data_Tree_Iter, Data_DCTX,
+						Write_Data_Inner'Access);
+			if D.Hash_Present then
+				Computed := HCTX.Final;
+				if Computed /= D.Hash_Val then
+					-- TODO INDENTATION EXCEEDED
+					raise Corrupt_Or_Tampered_Data_Error with "Hash mismatch. Expected " & Sodium.Functions.As_Hexidecimal(D.Hash_Val) & " but computed " & Sodium.Functions.As_Hexidecimal(Computed);
+				end if;
+			end if;
 		end Write_Data;
 
 		procedure Process_Next_Entry is
@@ -180,6 +206,77 @@ package body Bupstash_Restorer is
 			return Plaintext;
 		end;
 	end Read_And_Decrypt;
+
+	procedure For_Plaintext_Chunks(C1: in out Iter_Context;
+				C2: in out Tree_Iterator;
+				DCTX: in out Bupstash_Crypto.Decryption_Context;
+				Proc: access function(
+					Plaintext: in Stream_Element_Array;
+					Continue_Processing: out Boolean)
+				return Stream_Element_Offset) is
+
+		Continue_Processing: Boolean := True;
+
+		procedure Next_Chunk(Stashed_Data: in Stream_Element_Array;
+					Cursor: in Tree_Cursor) is
+			New_Chunk: constant Stream_Element_Array :=
+					Bupstash_Crypto.Decrypt_Data(DCTX,
+					Element(Cursor));
+			Use_Data: constant Stream_Element_Array :=
+						Stashed_Data & New_Chunk;
+			Num_Proc: constant Stream_Element_Offset :=
+					Proc(Use_Data, Continue_Processing);
+		begin
+			C1.Stash_Full_Chunk := New_Chunk'Length;
+			C1.Stored_Cursor.Replace_Element(C2.Next(Cursor));
+			C1.Stash.Replace_Element(Use_Data(Use_Data'First +
+						Num_Proc .. Use_Data'Last));
+		end Next_Chunk;
+
+		procedure Use_Stash(Stashed_Data: in Stream_Element_Array) is
+			Num_Proc: constant Stream_Element_Offset :=
+					Proc(Stashed_Data, Continue_Processing);
+		begin
+			C1.Stash.Replace_Element(Stashed_Data(
+						Stashed_Data'First + Num_Proc ..
+						Stashed_Data'Last));
+		end Use_Stash;
+
+		procedure Use_Cursor(Stashed_Data: in Stream_Element_Array) is
+			Cursor: constant Tree_Cursor :=
+						(if C1.Stored_Cursor.Is_Empty
+						then C2.First
+						else C1.Stored_Cursor.Element);
+		begin
+			if Cursor_Has_Element(Cursor) then
+				Next_Chunk(Stashed_Data, Cursor);
+			elsif Stashed_Data'Length > 0 then
+				Use_Stash(Stashed_Data);
+			else
+				Continue_Processing := False;
+			end if;
+		end Use_Cursor;
+
+		procedure Process_Chunk is
+			Stashed_Data: constant Stream_Element_Array :=
+						(if C1.Stash.Is_Empty
+						then Null_Stream_Element_Array
+						else C1.Stash.Element);
+		begin
+			if Stashed_Data'Length > 0 and Stashed_Data'Length >=
+						C1.Stash_Full_Chunk then
+				Use_Stash(Stashed_Data);
+			else
+				Use_Cursor(Stashed_Data);
+			end if;
+		end Process_Chunk;
+
+	begin
+		while Continue_Processing loop
+			Process_Chunk;
+		end loop;
+	end For_Plaintext_Chunks;
+
 
 	procedure Restore_Without_Index(Ctx: in Bupstash_Item.Item;
 			Key: in Bupstash_Key.Key; Data_Directory: in String) is
