@@ -11,6 +11,8 @@ package Bupstash_Key is
 	function Get_Metadata_PSK(K: in Key) return Bupstash_Types.PSK;
 	function Get_Idx_SK      (K: in Key) return Bupstash_Types.SK;
 	function Get_Idx_PSK     (K: in Key) return Bupstash_Types.PSK;
+	function Get_Data_SK     (K: in Key) return Bupstash_Types.SK;
+	function Get_Data_PSK    (K: in Key) return Bupstash_Types.PSK;
 
 	procedure Print(K: in Key);
 	function Derive_Index_Hash_Key(K: in Key)
@@ -94,6 +96,9 @@ private
 	function Get_Idx_SK(K: in Key) return Bupstash_Types.SK is (K.Idx_SK);
 	function Get_Idx_PSK(K: in Key) return Bupstash_Types.PSK is
 		(K.Idx_PSK);
+	function Get_Data_SK(K: in Key) return Bupstash_Types.SK is (K.Data_SK);
+	function Get_Data_PSK(K: in Key)
+				return Bupstash_Types.PSK is (K.Data_PSK);
 
 	function Derive_Hash_Key(Part_1, Part_2:
 					in Bupstash_Types.Partial_Hash_Key)
