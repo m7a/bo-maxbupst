@@ -10,7 +10,10 @@ package Bupstash_Crypto is
 	function New_Decryption_Context(SK: in Bupstash_Types.SK;
 		PSK: in Bupstash_Types.PSK) return Decryption_Context;
 	function Decrypt_Data(Ctx: in out Decryption_Context;
-		CT: in Stream_Element_Array) return Stream_Element_Array;
+		CT: in Stream_Element_Array) return Stream_Element_Array
+		with Pre => (CT'Length >= Bupstash_Types.Box_Publickeybytes +
+						Bupstash_Types.Box_Noncebytes +
+						Bupstash_Types.Box_Macbytes);
 
 private
 
@@ -29,8 +32,5 @@ private
 		Key: in Bupstash_Types.Box_Key) return Stream_Element_Array
 	with pre => (CT'Length >= (Bupstash_Types.Box_Noncebytes +
 						Bupstash_Types.Box_Macbytes));
-
-	--function Decompress_LZ4(Compressed: in Stream_Element_Array)
-	--					return Stream_Element_Array;
 
 end Bupstash_Crypto;

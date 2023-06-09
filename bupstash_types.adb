@@ -3,8 +3,6 @@ use  Ada.Streams;
 
 package body Bupstash_Types is
 
-	-- TODO x SHOULD MAYBE MAKE USE OF GENERICS FOR THESE IMPLEMENTATIONS
-
 	function Stream_Element_Array_To_Address(A: in Stream_Element_Array)
 							return Address is
 		A_Ret: Address;
