@@ -2,6 +2,7 @@ with Ada.Streams;
 use  Ada.Streams;
 with Ada.Text_IO;
 with Ada.Text_IO.Text_Streams;
+with Ada.Containers.Indefinite_Ordered_Maps;
 
 with Bupstash_Index;
 use  Bupstash_Index;
@@ -42,6 +43,26 @@ private
 	S_IFREG: constant U64 := 16#8000#;
 	S_IFLNK: constant U64 := 16#a000#;
 
-	type XTar_Ctx is tagged limited null record;
+	type Hardlink_Key is record
+		Dev: U64;
+		Ino: U64;
+	end record;
+
+	function "<"(A, B: in Hardlink_Key) return Boolean is
+			(A.Dev < B.Dev or (A.Dev = B.Dev and A.Ino < B.Ino));
+
+	package Hardlink_Maps is new Ada.Containers.Indefinite_Ordered_Maps(
+			Key_Type => Hardlink_Key, Element_Type => String);
+	use Hardlink_Maps;
+
+	type XTar_Ctx is tagged limited record
+		Hardlinks:           Map     := Empty_Map;
+		Current_Is_Hardlink: Boolean := False;
+	end record;
+
+	function Get_TAR_Type(CM: in Index_Entry_Meta)
+					return Tar_Writer.Tar_Entry_Type;
+	function Check_Hardlink(Ctx: in out XTar_Ctx;
+				CM: in Index_Entry_Meta) return String;
 
 end Bupstash_XTar;
