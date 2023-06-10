@@ -10,7 +10,7 @@ package Bupstash_Types is
 	Raw_ID_Len:             constant Integer := 16;
 	Address_Length:         constant Integer := 32;
 
-	subtype XID     is String(1 .. Raw_ID_Len);  -- src/xid.rs
+	subtype XID     is String(1 .. Raw_ID_Len);     -- src/xid.rs
 	subtype Address is String(1 .. Address_Length); -- src/address.rs
 
 	-- crypto_box_curve25519xchacha20poly1305_PUBLICKEYBYTES not def in .ads
@@ -35,7 +35,6 @@ package Bupstash_Types is
 	subtype Hash_Key         is Hash;
 
 	type U8 is mod 256;
-	type Octets is array (Natural range <>) of U8;
 
 	Compress_Footer_No_Compression: constant U8 := 0;
 	Compress_Footer_LZ4_Compressed: constant U8 := 1;
@@ -47,18 +46,24 @@ package Bupstash_Types is
 
 	Address_Null: constant Address := (others => Character'Val(0));
 
+	function To_Hex(S_In: in String) return String;
+	function From_Hex(S_In: in String) return String
+					with Pre => (S_In'Length mod 2) = 0;
+
 	function Stream_Element_Array_To_Address(
 			A: in Ada.Streams.Stream_Element_Array)
 			return Address with Pre => A'Length = Address_Length;
-
-	function String_To_Octets(S: in String) return Octets;
 
 	function "="(A, B: in U64)   return Boolean renames Interfaces."=";
 	function "<"(A, B: in U64)   return Boolean renames Interfaces."<";
 	function ">"(A, B: in U64)   return Boolean renames Interfaces.">";
 	function "+"(A, B: in U64)   return U64     renames Interfaces."+";
 	function "-"(A, B: in U64)   return U64     renames Interfaces."-";
-	--function "or"(A, B: in U64)  return U64     renames Interfaces."or";
 	function "and"(A, B: in U64) return U64     renames Interfaces."and";
+
+private
+
+	function To_Hex(C: in Character) return String;
+	function From_Hex(C1: in Character; C2: in Character) return Character;
 
 end Bupstash_Types;

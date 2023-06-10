@@ -16,8 +16,6 @@ with Bupstash_XTar;
 use  Bupstash_XTar;
 
 with Tar_Writer;
-
-with Sodium.Functions; -- As_Hexidecimal
 with Blake3;
 
 package body Bupstash_Restorer is
@@ -89,8 +87,11 @@ package body Bupstash_Restorer is
 			if D.Hash_Present then
 				Computed := HCTX.Final;
 				if Computed /= D.Hash_Val then
-					-- TODO INDENTATION EXCEEDED
-					raise Corrupt_Or_Tampered_Data_Error with "Hash mismatch. Expected " & Sodium.Functions.As_Hexidecimal(D.Hash_Val) & " but computed " & Sodium.Functions.As_Hexidecimal(Computed);
+					raise Corrupt_Or_Tampered_Data_Error
+						with "Hash mismatch. Expected "
+						& To_Hex(D.Hash_Val) &
+						" but computed " &
+						To_Hex(Computed);
 				end if;
 			end if;
 		end Write_Data;

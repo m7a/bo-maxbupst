@@ -6,7 +6,6 @@ use  Interfaces;
 with LZ4Ada;
 use  Lz4Ada;
 
-with Sodium.Functions;
 with Bupstash_Types;
 
 package body Bupstash_Compression is

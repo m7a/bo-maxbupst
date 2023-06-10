@@ -4,7 +4,6 @@ with Ada.Assertions;
 use  Ada.Assertions;
 with Ada.Directories;
 
-with Sodium.Functions;
 with Blake3;
 
 with Bupstash_Compression;
@@ -85,9 +84,8 @@ package body Bupstash_HTree_Iter is
 	begin
 		if CMP /= Addr then
 			raise Corrupt_Or_Tampered_Data_Error with
-				"Declared address " & Sodium.Functions.
-				As_Hexidecimal(Addr) & " but data indicates " &
-				Sodium.Functions.As_Hexidecimal(CMP);
+					"Declared address " & To_Hex(Addr) &
+					" but data indicates " & To_Hex(CMP);
 		end if;
 		Push_Level(Ctx, Height, Value);
 	end Check_Push_Level;
@@ -106,7 +104,7 @@ package body Bupstash_HTree_Iter is
 	function Get_Chunk(Data_Directory: in String; Addr: in Address)
 						return Stream_Element_Array is
 		Path: constant String := Ada.Directories.Compose(Data_Directory,
-					Sodium.Functions.As_Hexidecimal(Addr));
+								To_Hex(Addr));
 		SZ: constant Ada.Directories.File_Size :=
 						Ada.Directories.Size(Path);
 

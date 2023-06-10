@@ -1,6 +1,5 @@
 with Ada.Directories;
 use  Ada.Directories;
-with Sodium.Functions;
 with Bupstash_Types;
 with Bupstash_Restorer;
 
@@ -17,13 +16,13 @@ package body Bupstash_Repository is
 		end Inc_Num_Items;
 
 		Subdir: constant String := Compose(Repo_Directory, "items");
-		Flt: constant Filter_Type := (Directory => False,
+		Flt:    constant Filter_Type := (Directory => False,
 								others => True);
 
 		-- TODO z not so nice that we have to duplicate this just to
 		--        satisfy the limited type requirements...
 		KTMP: constant Bupstash_Key.Key := Bupstash_Key.Init(Key_File);
-		ST: Search_Type;
+		ST:   Search_Type;
 
 		function Init_Next_Entry return Bupstash_Item.Item is
 			DE: Directory_Entry_Type;
@@ -58,7 +57,7 @@ package body Bupstash_Repository is
 
 	procedure Restore(Repo: in Repository; Item_ID: in String) is
 		Item_XID: constant Bupstash_Types.XID :=
-					Sodium.Functions.As_Binary(Item_ID);
+					Bupstash_Types.From_Hex(Item_ID);
 		Data_Directory: constant String := Compose(Repo.Root, "data");
 	begin
 		for I of Repo.It loop
@@ -69,7 +68,7 @@ package body Bupstash_Repository is
 			end if;
 		end loop;
 		raise Constraint_Error with "No item with ID <" &
-			Sodium.Functions.As_Hexidecimal(Item_XID) & "> found.";
+				Bupstash_Types.To_Hex(Item_XID) & "> found.";
 	end Restore;
 
 end Bupstash_Repository;

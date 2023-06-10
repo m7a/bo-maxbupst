@@ -1,7 +1,6 @@
 with Ada.Assertions;
 with Ada.Text_IO;
 
-with Sodium.Functions;
 with Blake3;
 
 with ZBase64;
@@ -114,8 +113,7 @@ package body Bupstash_Key is
 
 	procedure Print(K: in Key) is
 	begin
-		Ada.Text_IO.Put_Line("Key ID: " &
-				Sodium.Functions.As_Hexidecimal(String(K.ID)));
+		Ada.Text_IO.Put_Line("Key ID: " & To_Hex(String(K.ID)));
 	end Print;
 
 	function Derive_Index_Hash_Key(K: in Key)

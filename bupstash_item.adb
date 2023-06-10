@@ -5,8 +5,6 @@ with Ada.Assertions;
 use  Ada.Assertions;
 with Ada.Directories;
 
-with Sodium.Functions;
-
 with Serde;
 with Bupstash_Types;
 use  Bupstash_Types;
@@ -68,7 +66,7 @@ package body Bupstash_Item is
 	begin
 		Open(FD, In_File, Item_File);
 		return Ret: Item do
-			Ret.ID := Sodium.Functions.As_Binary(
+			Ret.ID := From_Hex(
 					Ada.Directories.Base_Name(Item_File));
 			Read(FD, Raw_Data, Raw_Length);
 			Decode_Plain_Text_Item_Metadata(
@@ -177,10 +175,9 @@ package body Bupstash_Item is
 		end Print_Tag;
 	begin
 		New_Line;
-		Put_Line("Item ID = " &
-				Sodium.Functions.As_Hexidecimal(Ctx.ID));
+		Put_Line("Item ID = " & To_Hex(Ctx.ID));
 		Put_Line("-- Plain Text Metadata --");
-		Put_Line("Primary Key ID = " & Sodium.Functions.As_Hexidecimal(
+		Put_Line("Primary Key ID = " & To_Hex(
 						Ctx.Plain.Primary_Key_ID));
 		Put_Line("Timestamp (millis) = " &
 			U64'Image(Ctx.Plain.Unix_Timestamp_Millis));
@@ -193,16 +190,13 @@ package body Bupstash_Item is
 			Put_Line("-- No Index Tree present --");
 		end if;
 		Put_Line("-- V3 Secret Item Metadata -- ");
-		Put_Line("Plain Text Hash = " & Sodium.Functions.As_Hexidecimal(
+		Put_Line("Plain Text Hash = " & To_Hex(
 						Ctx.Decrypted.Plain_Text_Hash));
-		Put_Line("Send Key ID = " & Sodium.Functions.As_Hexidecimal(
-						Ctx.Decrypted.Send_Key_ID));
+		Put_Line("Send Key ID = " & To_Hex(Ctx.Decrypted.Send_Key_ID));
 		Put_Line("Index Hash Key Part = " &
-					Sodium.Functions.As_Hexidecimal(
-					Ctx.Decrypted.Index_Hash_Key_Part_2));
+				To_Hex(Ctx.Decrypted.Index_Hash_Key_Part_2));
 		Put_Line("Data Hash Key Part = " &
-					Sodium.Functions.As_Hexidecimal(
-					Ctx.Decrypted.Data_Hash_Key_Part_2));
+				To_Hex(Ctx.Decrypted.Data_Hash_Key_Part_2));
 		Put_Line("Tags:");
 		Ctx.Decrypted.Tags.Iterate(Print_Tag'Access);
 		Put_Line("Data Size = " & Bupstash_Types.U64'Image(
@@ -218,8 +212,7 @@ package body Bupstash_Item is
 		Put_Line("Height = " & U64'Image(Ctx.Height));
 		Put_Line("Data_Chunk_Count = " &
 					U64'Image(Ctx.Data_Chunk_Count));
-		Put_Line("Address = " & Sodium.Functions.As_Hexidecimal(String(
-								Ctx.Address)));
+		Put_Line("Address = " & To_Hex(String(Ctx.Address)));
 	end Print;
 
 	function Has_XID(Ctx: in Item; Cmp: in Bupstash_Types.XID)
