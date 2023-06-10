@@ -1,4 +1,5 @@
 with Ada.Text_IO;
+with Ada.Text_IO.Text_Streams;
 with Ada.Streams;
 use  Ada.Streams;
 with Ada.Containers;
@@ -205,8 +206,29 @@ package body Bupstash_Restorer is
 
 	procedure Restore_Without_Index(Ctx: in Bupstash_Item.Item;
 			Key: in Bupstash_Key.Key; Data_Directory: in String) is
+		Stdout: constant access Root_Stream_Type'Class :=
+						Ada.Text_IO.Text_Streams.Stream(
+						Ada.Text_IO.Standard_Output);
+		Data_Tree_LL: Tree_Reader :=
+				Ctx.Init_HTree_Reader_For_Data_Tree;
+		Data_Tree_Iter: Tree_Iterator := Init(Data_Tree_LL,
+				Data_Directory, Key.Derive_Data_Hash_Key);
+		Data_DCTX: Bupstash_Crypto.Decryption_Context :=
+				Bupstash_Crypto.New_Decryption_Context(
+				Key.Get_Data_SK, Key.Get_Data_PSK);
+		Data_PT_Iter: Iter_Context := (others => <>);
+
+		function Write_Data_Inner(Raw: in Stream_Element_Array;
+						Continue_Proc: out Boolean)
+						return Stream_Element_Offset is
+		begin
+			Stdout.Write(Raw);
+			Continue_Proc := True;
+			return Raw'Length;
+		end Write_Data_Inner;
 	begin
-		Ada.Text_IO.Put_Line("TODO RESTORE WITHOUT INDEX NOT IMPLEMENTED");
+		For_Plaintext_Chunks(Data_PT_Iter, Data_Tree_Iter,
+					Data_DCTX, Write_Data_Inner'Access);
 	end Restore_Without_Index;
 
 end Bupstash_Restorer;
