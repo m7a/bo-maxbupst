@@ -1,0 +1,62 @@
+repository: /data/main/120_mdvl_rr/bo-maxbupst/testdata/small-0.10.3
+key_id: ec8a710f17d79f69350e394c1cb5de57
+items:
+ - item_id: c3c7b8e93cec5c85c45a58e6c866f918
+   plaintext_metadata:
+     primary_key_id: ec8a710f17d79f69350e394c1cb5de57
+     timestamp_ms: 1686488340915
+     datatree:
+       height: 0
+       data_chunk_count: 1
+       address: ec2483d0e0ddccb1adb8cdc6cdc2d71b80d102141b3e2a05ba619daa025836bd
+     # no index tree present
+   secret_metadata:
+     plain_text_hash: 9a05fef83c5aa9e084298f2ae0500f19278c411c7815b80bde46d06fed588b89
+     send_key_id: ec8a710f17d79f69350e394c1cb5de57
+     index_hash_key_part_2: a2a3a33c71a8732300e63a11d6af2d02c74f87bbecd20f456d2630fc2dfbfd59
+     data_hash_key_part_2: a54764fcc17739f39f1a0b52e8dd6e3037f8a5b7a2ea20d4ab845c5b4498c17f
+     tags:
+       masysma: singlefile-bupstash-key.ads
+     data_size: 3983
+     index_size: 0
+ - item_id: 81e33ca1db1e6d562bc7146ddd9b37ab
+   plaintext_metadata:
+     primary_key_id: ec8a710f17d79f69350e394c1cb5de57
+     timestamp_ms: 1686488341067
+     datatree:
+       height: 1
+       data_chunk_count: 4
+       address: 1f210bf57fb0e5fa809f18befbbc0d8a0e9f642bcf4d73e28ceb40262053bd15
+     indextree:
+       height: 0
+       data_chunk_count: 1
+       address: 999eb97066c88f34f160d4096ce4f5eb5a902534cf26c03a5cd3518023088bcb
+   secret_metadata:
+     plain_text_hash: a63d2d574fa9be82155c2c7383187625d1e42e0abaddd88ea6d87f9fcc47c800
+     send_key_id: ec8a710f17d79f69350e394c1cb5de57
+     index_hash_key_part_2: a2a3a33c71a8732300e63a11d6af2d02c74f87bbecd20f456d2630fc2dfbfd59
+     data_hash_key_part_2: a54764fcc17739f39f1a0b52e8dd6e3037f8a5b7a2ea20d4ab845c5b4498c17f
+     tags:
+       masysma: repocnt
+       name: bo-maxbupst.tar
+     data_size: 2535467
+     index_size: 8080
+ - item_id: 598f1fee879bef635b4fcca8b69167dc
+   plaintext_metadata:
+     primary_key_id: ec8a710f17d79f69350e394c1cb5de57
+     timestamp_ms: 1686488341167
+     datatree:
+       height: 0
+       data_chunk_count: 1
+       address: 972311bca2fee581c1f46c7fb6fa57e9a44327d1f5a3c3dd6292fe2cf4e09a53
+     # no index tree present
+   secret_metadata:
+     plain_text_hash: 25e46ddfdedf0759aa3782d2b5d8bf111b76965402feafdc0e88eeeb84486a97
+     send_key_id: ec8a710f17d79f69350e394c1cb5de57
+     index_hash_key_part_2: a2a3a33c71a8732300e63a11d6af2d02c74f87bbecd20f456d2630fc2dfbfd59
+     data_hash_key_part_2: a54764fcc17739f39f1a0b52e8dd6e3037f8a5b7a2ea20d4ab845c5b4498c17f
+     tags:
+       masysma: zero8m
+       name: zero8m.bin
+     data_size: 8388608
+     index_size: 0

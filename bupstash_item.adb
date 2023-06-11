@@ -170,7 +170,7 @@ package body Bupstash_Item is
 
 		procedure Print_Tag(Position: in Cursor) is
 		begin
-			Put_Line("      " & Key(Position) & ": " &
+			Put_Line("       " & Key(Position) & ": " &
 							Element(Position));
 		end Print_Tag;
 	begin
