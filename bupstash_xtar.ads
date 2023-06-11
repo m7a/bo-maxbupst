@@ -9,7 +9,8 @@ use  Bupstash_Index;
 with Bupstash_Types;
 use  Bupstash_Types;
 
-with Tar_Writer;
+with Tar;
+with Tar.Writer;
 
 -- manages TAR data streaming
 package Bupstash_XTar is
@@ -18,15 +19,15 @@ package Bupstash_XTar is
 
 	function Init return XTar_Ctx;
 	function Begin_Entry_From_Metadata(Ctx: in out XTar_Ctx;
-			CM: in Index_Entry_Meta) return Tar_Writer.Tar_Entry;
+			CM: in Index_Entry_Meta) return Tar.Writer.Tar_Entry;
 
 	procedure Begin_Entry(Ctx: in out XTar_Ctx;
-					Tar: in out Tar_Writer.Tar_Entry);
+					TE: in out Tar.Writer.Tar_Entry);
 	procedure Add_Content(Ctx: in out XTar_Ctx;
-					Tar: in out Tar_Writer.Tar_Entry;
+					TE: in out Tar.Writer.Tar_Entry;
 					Cnt: in Stream_Element_Array);
 	procedure End_Entry(Ctx: in out XTar_Ctx;
-					Tar: in out Tar_Writer.Tar_Entry);
+					TE: in out Tar.Writer.Tar_Entry);
 	procedure End_Tar(Ctx: in out XTar_Ctx);
 
 private
@@ -61,7 +62,7 @@ private
 	end record;
 
 	function Get_TAR_Type(CM: in Index_Entry_Meta)
-					return Tar_Writer.Tar_Entry_Type;
+						return Tar.Tar_Entry_Type;
 	function Check_Hardlink(Ctx: in out XTar_Ctx;
 				CM: in Index_Entry_Meta) return String;
 

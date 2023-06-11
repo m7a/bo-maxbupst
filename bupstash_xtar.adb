@@ -3,48 +3,48 @@ package body Bupstash_XTar is
 	function Init return XTar_Ctx is (others => <>);
 
 	function Begin_Entry_From_Metadata(Ctx: in out XTar_Ctx;
-			CM: in Index_Entry_Meta) return Tar_Writer.Tar_Entry is
-		use type Tar_Writer.Tar_Entry_Type;
-		Ent_T: constant Tar_Writer.Tar_Entry_Type := Get_TAR_Type(CM);
+			CM: in Index_Entry_Meta) return Tar.Writer.Tar_Entry is
+		use type Tar.Tar_Entry_Type;
+		Ent_T: constant Tar.Tar_Entry_Type := Get_TAR_Type(CM);
 		Is_Hardlinked: constant Boolean :=
-			(Ent_T /= Tar_Writer.Directory and CM.N_Link > 1);
+			(Ent_T /= Tar.Directory and CM.N_Link > 1);
 		Hardlink: constant String :=
 			(if Is_Hardlinked then Ctx.Check_Hardlink(CM) else "");
 	begin
 		Ctx.Current_Is_Hardlink := Hardlink'Length > 0;
-		return Tar: Tar_Writer.Tar_Entry :=
-					Tar_Writer.Init_Entry(CM.Path) do
-			Tar.Set_Access_Mode(Tar_Writer.Access_Mode(
-				Tar_Writer."and"(CM.Mode, 8#7777#)));
+		return TE: Tar.Writer.Tar_Entry :=
+					Tar.Writer.Init_Entry(CM.Path) do
+			TE.Set_Access_Mode(Tar.Access_Mode(
+						Tar."and"(CM.Mode, 8#7777#)));
 
 			if Ctx.Current_Is_Hardlink then
-				Tar.Set_Type(Tar_Writer.Hardlink);
-				Tar.Set_Link_Target(Hardlink);
+				TE.Set_Type(Tar.Hardlink);
+				TE.Set_Link_Target(Hardlink);
 			else
-				Tar.Set_Type(Ent_T);
+				TE.Set_Type(Ent_T);
 				if CM.Link_Target_Present then
-					Tar.Set_Link_Target(CM.Link_Target);
+					TE.Set_Link_Target(CM.Link_Target);
 				end if;
-				Tar.Set_Size(CM.Size);
+				TE.Set_Size(CM.Size);
 			end if;
 
-			Tar.Set_Modification_Time(CM.M_Time);
-			Tar.Set_Owner(CM.UID, CM.GID);
-			Tar.Set_Device(Tar_Writer.Dev_Node(CM.Dev_Major),
-					Tar_Writer.Dev_Node(CM.Dev_Minor));
+			TE.Set_Modification_Time(CM.M_Time);
+			TE.Set_Owner(CM.UID, CM.GID);
+			TE.Set_Device(Tar.Dev_Node(CM.Dev_Major),
+						Tar.Dev_Node(CM.Dev_Minor));
 		end return;
 	end Begin_Entry_From_Metadata;
 
 	function Get_TAR_Type(CM: in Index_Entry_Meta)
-					return Tar_Writer.Tar_Entry_Type is
+						return Tar.Tar_Entry_Type is
 	begin
 		case CM.Mode and S_IFMT is
-		when S_IFREG => return Tar_Writer.File;
-		when S_IFLNK => return Tar_Writer.Symlink;
-		when S_IFCHR => return Tar_Writer.Char;
-		when S_IFBLK => return Tar_Writer.Block;
-		when S_IFDIR => return Tar_Writer.Directory;
-		when S_IFIFO => return Tar_Writer.FIFO;
+		when S_IFREG => return Tar.File;
+		when S_IFLNK => return Tar.Symlink;
+		when S_IFCHR => return Tar.Char;
+		when S_IFBLK => return Tar.Block;
+		when S_IFDIR => return Tar.Directory;
+		when S_IFIFO => return Tar.FIFO;
 		when others  => raise Constraint_Error with
 				"Cannot create TAR header for mode " &
 				U64'Image(CM.Mode) & " file=" & CM.Path;
@@ -65,29 +65,29 @@ package body Bupstash_XTar is
 	end Check_Hardlink;
 
 	procedure Begin_Entry(Ctx: in out XTar_Ctx;
-					Tar: in out Tar_Writer.Tar_Entry) is
+					TE: in out Tar.Writer.Tar_Entry) is
 	begin
-		Stdout.Write(Tar.Begin_Entry);
+		Stdout.Write(TE.Begin_Entry);
 	end Begin_Entry;
 
 	procedure Add_Content(Ctx: in out XTar_Ctx;
-					Tar: in out Tar_Writer.Tar_Entry;
+					TE: in out Tar.Writer.Tar_Entry;
 					Cnt: in Stream_Element_Array) is
 	begin
 		if not Ctx.Current_Is_Hardlink then
-			Stdout.Write(Tar.Add_Content(Cnt));
+			Stdout.Write(TE.Add_Content(Cnt));
 		end if;
 	end Add_Content;
 
 	procedure End_Entry(Ctx: in out XTar_Ctx;
-					Tar: in out Tar_Writer.Tar_Entry) is
+					TE: in out Tar.Writer.Tar_Entry) is
 	begin
-		Stdout.Write(Tar.End_Entry);
+		Stdout.Write(TE.End_Entry);
 	end End_Entry;
 
 	procedure End_Tar(Ctx: in out XTar_Ctx) is
 	begin
-		Stdout.Write(Tar_Writer.End_Tar);
+		Stdout.Write(Tar.Writer.End_Tar);
 	end End_Tar;
 
 end Bupstash_XTar;

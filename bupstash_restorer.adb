@@ -15,7 +15,8 @@ use  Bupstash_Index;
 with Bupstash_XTar;
 use  Bupstash_XTar;
 
-with Tar_Writer;
+with Tar;
+with Tar.Writer;
 with Blake3;
 
 package body Bupstash_Restorer is
@@ -53,7 +54,7 @@ package body Bupstash_Restorer is
 				Key.Get_Data_SK, Key.Get_Data_PSK);
 		Data_PT_Iter: Iter_Context := (others => <>);
 	
-		procedure Write_Data(Tar: in out Tar_Writer.Tar_Entry;
+		procedure Write_Data(TE: in out Tar.Writer.Tar_Entry;
 				D: in Index_Entry_Data; Ent_SIze: in U64) is
 
 			Remaining: U64           := Ent_Size;
@@ -72,7 +73,7 @@ package body Bupstash_Restorer is
 				Data_Str: String(1 .. Use_Data'Length);
 				for Data_Str'Address use Use_Data'Address;
 			begin
-				XTar.Add_Content(Tar, Use_Data);
+				XTar.Add_Content(TE, Use_Data);
 				if Data_Str'Length > 0 then
 					HCTX.Update(Data_Str);
 				end if;
@@ -108,18 +109,18 @@ package body Bupstash_Restorer is
 
 			procedure Process_Next_Meta_Entry is
 				CM: Index_Entry_Meta := Index_Iter.Next;
-				Tar: Tar_Writer.Tar_Entry :=
+				TE: Tar.Writer.Tar_Entry :=
 					XTar.Begin_Entry_From_Metadata(CM);
 			begin
 				for I in 1 .. CM.Num_X_Attrs loop
-					Tar.Add_X_Attr(
+					TE.Add_X_Attr(
 						Index_Iter.Next_X_Attr_Key,
 						Index_Iter.Next_X_Attr_Value
 					);
 				end loop;
-				XTar.Begin_Entry(Tar);
-				Write_Data(Tar, Index_Iter.Next_Data, CM.Size);
-				XTar.End_Entry(Tar);
+				XTar.Begin_Entry(TE);
+				Write_Data(TE, Index_Iter.Next_Data, CM.Size);
+				XTar.End_Entry(TE);
 			end Process_Next_Meta_Entry;
 		begin
 			while Index_Iter.Has_Next loop

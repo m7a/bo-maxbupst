@@ -3,7 +3,6 @@
 
 <property name="masysma.target" value="maxbupst"/> 
 
-<!-- overrides the default build command -->
 <target name="masysma_internal_build_ada">
 	<exec executable="gnatmake" failonerror="true">
 		<arg value="-Wall"/>
@@ -14,10 +13,13 @@
 		<arg value="-aO/usr/lib/x86_64-linux-gnu/ada/adalib/blake3"/>
 		<arg value="-aI/usr/share/ada/adainclude/lz4"/>
 		<arg value="-aO/usr/lib/x86_64-linux-gnu/ada/adalib/lz4"/>
+		<arg value="-aI/usr/share/ada/adainclude/tar"/>
+		<arg value="-aO/usr/lib/x86_64-linux-gnu/ada/adalib/tar"/>
 		<arg value="-largs"/>
 		<arg value="-lsodium"/>
 		<arg value="-lblake3"/>
 		<arg value="-llz4ada"/>
+		<arg value="-ltarada"/>
 	</exec>
 </target>
 
