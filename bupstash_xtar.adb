@@ -15,7 +15,7 @@ package body Bupstash_XTar is
 		return TE: Tar.Writer.Tar_Entry :=
 					Tar.Writer.Init_Entry(CM.Path) do
 			TE.Set_Access_Mode(Tar.Access_Mode(
-						Tar."and"(CM.Mode, 8#7777#)));
+					Tar."and"(CM.Mode, 8#7777777#)));
 
 			if Ctx.Current_Is_Hardlink then
 				TE.Set_Type(Tar.Hardlink);
