@@ -53,8 +53,8 @@ private
 
 	type Length_Array is array (Integer range <>) of U64;
 
-	USTAR_Offset_Name: constant Stream_Element_Offset   := 0;
-	USTAR_Length_Name: constant Stream_Element_Offset   := 100;
+	USTAR_Offset_Name:   constant Stream_Element_Offset := 0;
+	USTAR_Length_Name:   constant Stream_Element_Offset := 100;
 	USTAR_Offset_Prefix: constant Stream_Element_Offset := 345;
 	USTAR_Length_Prefix: constant Stream_Element_Offset := 155;
 

@@ -1,5 +1,7 @@
+with Ada.Text_IO;
 with Ada.Directories;
 use  Ada.Directories;
+
 with Bupstash_Types;
 with Bupstash_Restorer;
 
@@ -49,7 +51,9 @@ package body Bupstash_Repository is
 
 	procedure Print_Info(Repo: in Repository) is
 	begin
+		Ada.Text_IO.Put_Line("repository: " & Repo.Root);
 		Repo.Key.Print;
+		Ada.Text_IO.Put_Line("items:");
 		for I of Repo.It loop
 			I.Print;
 		end loop;

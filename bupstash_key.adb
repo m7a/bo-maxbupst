@@ -113,7 +113,7 @@ package body Bupstash_Key is
 
 	procedure Print(K: in Key) is
 	begin
-		Ada.Text_IO.Put_Line("Key ID: " & To_Hex(String(K.ID)));
+		Ada.Text_IO.Put_Line("key_id: " & To_Hex(String(K.ID)));
 	end Print;
 
 	function Derive_Index_Hash_Key(K: in Key)

@@ -170,49 +170,48 @@ package body Bupstash_Item is
 
 		procedure Print_Tag(Position: in Cursor) is
 		begin
-			Put_Line("  " & Key(Position) & " = " &
+			Put_Line("      " & Key(Position) & ": " &
 							Element(Position));
 		end Print_Tag;
 	begin
-		New_Line;
-		Put_Line("Item ID = " & To_Hex(Ctx.ID));
-		Put_Line("-- Plain Text Metadata --");
-		Put_Line("Primary Key ID = " & To_Hex(
+		Put_Line(" - item_id: " & To_Hex(Ctx.ID));
+		Put_Line("   plaintext_metadata:");
+		Put_Line("     primary_key_id: " & To_Hex(
 						Ctx.Plain.Primary_Key_ID));
-		Put_Line("Timestamp (millis) = " &
-			U64'Image(Ctx.Plain.Unix_Timestamp_Millis));
-		Put_Line("-- Data Tree --");
+		Put_Line("     timestamp_ms:" &
+				U64'Image(Ctx.Plain.Unix_Timestamp_Millis));
+		Put_Line("     datatree:");
 		Ctx.Plain.Data_Tree.Print;
 		if Ctx.Plain.Has_Index_Tree then
-			Put_Line("-- Index Tree --");
+			Put_Line("     indextree:");
 			Ctx.Plain.Index_Tree.Print;
 		else
-			Put_Line("-- No Index Tree present --");
+			Put_Line("     # no index tree present");
 		end if;
-		Put_Line("-- V3 Secret Item Metadata -- ");
-		Put_Line("Plain Text Hash = " & To_Hex(
+		Put_Line("   secret_metadata:");
+		Put_Line("     plain_text_hash: " & To_Hex(
 						Ctx.Decrypted.Plain_Text_Hash));
-		Put_Line("Send Key ID = " & To_Hex(Ctx.Decrypted.Send_Key_ID));
-		Put_Line("Index Hash Key Part = " &
+		Put_Line("     send_key_id: " &
+					To_Hex(Ctx.Decrypted.Send_Key_ID));
+		Put_Line("     index_hash_key_part_2: " &
 				To_Hex(Ctx.Decrypted.Index_Hash_Key_Part_2));
-		Put_Line("Data Hash Key Part = " &
+		Put_Line("     data_hash_key_part_2: " &
 				To_Hex(Ctx.Decrypted.Data_Hash_Key_Part_2));
-		Put_Line("Tags:");
+		Put_Line("     tags:");
 		Ctx.Decrypted.Tags.Iterate(Print_Tag'Access);
-		Put_Line("Data Size = " & Bupstash_Types.U64'Image(
+		Put_Line("     data_size:" & Bupstash_Types.U64'Image(
 						Ctx.Decrypted.Data_Size));
-		Put_Line("Index Size = " & Bupstash_Types.U64'Image(
+		Put_Line("     index_size:" & Bupstash_Types.U64'Image(
 						Ctx.Decrypted.Index_Size));
-		Put_Line("-- END --");
 	end Print;
 
 	procedure Print(Ctx: in H_Tree_Metadata) is
 		use Ada.Text_IO;
 	begin
-		Put_Line("Height = " & U64'Image(Ctx.Height));
-		Put_Line("Data_Chunk_Count = " &
+		Put_Line("       height:" & U64'Image(Ctx.Height));
+		Put_Line("       data_chunk_count:" &
 					U64'Image(Ctx.Data_Chunk_Count));
-		Put_Line("Address = " & To_Hex(String(Ctx.Address)));
+		Put_Line("       address: " & To_Hex(String(Ctx.Address)));
 	end Print;
 
 	function Has_XID(Ctx: in Item; Cmp: in Bupstash_Types.XID)
