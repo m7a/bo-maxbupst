@@ -49,13 +49,11 @@ test_extract_8m() { # TEST CASE
 }
 
 test_extract_repo_cmp_ref() { # TEST CASE
-	refd="$tmp/test_extract_repo_cmp_ref_ref"
-	uutd="$tmp/test_extract_repo_cmp_ref_uut"
-	mkdir "$refd" "$uutd"
-	"$ref" get masysma=repocnt                    | tar -C "$refd" -x
-	"$uut" -g -i 81e33ca1db1e6d562bc7146ddd9b37ab | tar -C "$uutd" -x
-	# TODO NEED SOMETHING BETTER HERE
-	diff -ru "$refd" "$uutd"
+	"$ref" get masysma=repocnt > "$tmp/test_extract_repo_cmp_ref_ref.tar"
+	"$uut" -g -i 81e33ca1db1e6d562bc7146ddd9b37ab \
+				> "$tmp/test_extract_repo_cmp_ref_uut.tar"
+	diffoscope "$tmp/test_extract_repo_cmp_ref_ref.tar" \
+					"$tmp/test_extract_repo_cmp_ref_uut.tar"
 }
 
 # ------------------------------------------------------------------------------
