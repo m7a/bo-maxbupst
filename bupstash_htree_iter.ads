@@ -21,11 +21,11 @@ package Bupstash_HTree_Iter is
 	overriding function First(Object: in Tree_Iterator) return Tree_Cursor;
 	overriding function Next(Object: in Tree_Iterator;
 				Position: in Tree_Cursor) return Tree_Cursor;
+	function Get_Address(Position: in Tree_Cursor) return Address;
 	function Element(Position: in Tree_Cursor) return Stream_Element_Array;
 
 	function Init(Ctx: in out Bupstash_HTree_LL.Tree_Reader;
-				Data_Directory: in String; HK: in Hash_Key)
-				return Tree_Iterator;
+				Data_Directory: in String) return Tree_Iterator;
 
 private
 

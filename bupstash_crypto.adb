@@ -13,7 +13,7 @@ package body Bupstash_Crypto is
 	function Decrypt_Data(Ctx: in out Decryption_Context;
 						CT: in Stream_Element_Array)
 						return Stream_Element_Array is
-		PK_Slice_In: constant Stream_Element_Array := Ct(CT'Last -
+		PK_Slice_In: constant Stream_Element_Array := CT(CT'Last -
 			Stream_Element_Offset(Bupstash_Types.Box_Publickeybytes)
 			+ 1 .. CT'Last);
 		PK_Slice_Conv: Bupstash_Types.PK;
@@ -63,5 +63,16 @@ package body Bupstash_Crypto is
 	begin
 		return PT_Conv;
 	end Box_Decrypt;
+
+	function Keyed_Content_Address(Data: in Stream_Element_Array;
+						Key: in Bupstash_Types.Hash_Key)
+						return Bupstash_Types.Address is
+		Data_Conv: String(1 .. Data'Length);
+		for Data_Conv'Address use Data'Address;
+		Ctx: Blake3.Hasher := Blake3.Init(Key);
+	begin
+		Ctx.Update(Data_Conv);
+		return Ctx.Final;
+	end Keyed_Content_Address;
 
 end Bupstash_Crypto;

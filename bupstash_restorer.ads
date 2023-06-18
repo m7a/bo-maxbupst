@@ -2,6 +2,7 @@ with Bupstash_Key;
 with Bupstash_Item;
 with Bupstash_Crypto;
 with Bupstash_HTree_Iter;
+with Bupstash_Types;
 with Ada.Streams;
 with Ada.Containers.Indefinite_Holders;
 
@@ -29,6 +30,7 @@ private
 	use CH;
 
 	type Iter_Context is tagged limited record
+		HK:               Bupstash_Types.Hash_Key;
 		Stored_Cursor:    CH.Holder  := CH.Empty_Holder;
 		Stash:            SAH.Holder := SAH.Empty_Holder;
 		Stash_Full_Chunk: Ada.Streams.Stream_Element_Offset := 0;

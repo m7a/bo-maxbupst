@@ -39,9 +39,12 @@ package body Bupstash_HTree_Iter is
 	function Element(Position: in Tree_Cursor) return Stream_Element_Array
 			is (Get_Chunk(Position.Data_Dir, Position.Addr));
 
+	function Get_Address(Position: in Tree_Cursor) return Address is
+								(Position.Addr);
+
 	-- server.rs send_htree and client.rs receive_htree
-	function Init(Ctx: in out Tree_Reader; Data_Directory: in String;
-					HK: in Hash_Key) return Tree_Iterator is
+	function Init(Ctx: in out Tree_Reader; Data_Directory: in String)
+							return Tree_Iterator is
 
 		function Process_Addresses(Buf: in Stream_Element_Array)
 			return Tree_Iterator is (N  => Data_Directory'Length,

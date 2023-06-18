@@ -15,6 +15,10 @@ package Bupstash_Crypto is
 						Bupstash_Types.Box_Noncebytes +
 						Bupstash_Types.Box_Macbytes);
 
+	function Keyed_Content_Address(Data: in Stream_Element_Array;
+						Key: in Bupstash_Types.Hash_Key)
+						return Bupstash_Types.Address;
+
 private
 
 	type Decryption_Context is tagged limited record

@@ -39,20 +39,22 @@ package body Bupstash_Restorer is
 		Index_Tree_LL: Tree_Reader := 
 					Ctx.Init_HTree_Reader_For_Index_Tree;
 		Index_Tree_Iter: Tree_Iterator := Init(Index_Tree_LL,
-				Data_Directory, Key.Derive_Index_Hash_Key);
+								Data_Directory);
 		Index_DCTX: Bupstash_Crypto.Decryption_Context :=
 				Bupstash_Crypto.New_Decryption_Context(
 				Key.Get_Idx_SK, Key.Get_Idx_PSK);
-		Index_PT_Iter: Iter_Context := (others => <>);
+		Index_PT_Iter: Iter_Context := (HK => Key.Derive_Index_Hash_Key,
+								others => <>);
 
 		Data_Tree_LL: Tree_Reader :=
 				Ctx.Init_HTree_Reader_For_Data_Tree;
 		Data_Tree_Iter: Tree_Iterator := Init(Data_Tree_LL,
-				Data_Directory, Key.Derive_Data_Hash_Key);
+								Data_Directory);
 		Data_DCTX: Bupstash_Crypto.Decryption_Context :=
 				Bupstash_Crypto.New_Decryption_Context(
 				Key.Get_Data_SK, Key.Get_Data_PSK);
-		Data_PT_Iter: Iter_Context := (others => <>);
+		Data_PT_Iter: Iter_Context := (HK => Key.Derive_Data_Hash_Key,
+								others => <>);
 	
 		procedure Write_Data(TE: in out Tar.Writer.Tar_Entry;
 				D: in Index_Entry_Data; Ent_SIze: in U64) is
@@ -146,11 +148,27 @@ package body Bupstash_Restorer is
 
 		Continue_Processing: Boolean := True;
 
+		function Read_And_Decrypt_Chunk(Cursor: in Tree_Cursor)
+				return Stream_Element_Array is
+			PT: constant Stream_Element_Array := Bupstash_Crypto.
+					Decrypt_Data(DCTX, Element(Cursor));
+			Computed_Addr: constant Address := Bupstash_Crypto.
+					Keyed_Content_Address(PT, C1.HK);
+		begin
+			if Computed_Addr /= Get_Address(Cursor) then
+				raise Corrupt_Or_Tampered_Data_Error with
+					"Address mismatch. Data declares " &
+					To_Hex(Get_Address(Cursor)) &
+					" but computed " &
+					To_Hex(Computed_Addr);
+			end if;
+			return PT;
+		end Read_And_Decrypt_Chunk;
+
 		procedure Next_Chunk(Stashed_Data: in Stream_Element_Array;
 					Cursor: in Tree_Cursor) is
 			New_Chunk: constant Stream_Element_Array :=
-					Bupstash_Crypto.Decrypt_Data(DCTX,
-					Element(Cursor));
+						Read_And_Decrypt_Chunk(Cursor);
 			Use_Data: constant Stream_Element_Array :=
 						Stashed_Data & New_Chunk;
 			Num_Proc: constant Stream_Element_Offset :=
@@ -212,13 +230,14 @@ package body Bupstash_Restorer is
 						Ada.Text_IO.Text_Streams.Stream(
 						Ada.Text_IO.Standard_Output);
 		Data_Tree_LL: Tree_Reader :=
-				Ctx.Init_HTree_Reader_For_Data_Tree;
+					Ctx.Init_HTree_Reader_For_Data_Tree;
 		Data_Tree_Iter: Tree_Iterator := Init(Data_Tree_LL,
-				Data_Directory, Key.Derive_Data_Hash_Key);
+								Data_Directory);
 		Data_DCTX: Bupstash_Crypto.Decryption_Context :=
 				Bupstash_Crypto.New_Decryption_Context(
 				Key.Get_Data_SK, Key.Get_Data_PSK);
-		Data_PT_Iter: Iter_Context := (others => <>);
+		Data_PT_Iter: Iter_Context := (HK => Key.Derive_Data_Hash_Key,
+								others => <>);
 
 		function Write_Data_Inner(Raw: in Stream_Element_Array;
 						Continue_Proc: out Boolean)
