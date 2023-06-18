@@ -18,8 +18,8 @@ package body Bupstash_Repository is
 		end Inc_Num_Items;
 
 		Subdir: constant String := Compose(Repo_Directory, "items");
-		Flt:    constant Filter_Type := (Directory => False,
-								others => True);
+		Flt:    constant Filter_Type := (Ordinary_File => True,
+							others => False);
 
 		-- TODO z not so nice that we have to duplicate this just to
 		--        satisfy the limited type requirements...

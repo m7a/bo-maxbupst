@@ -23,9 +23,29 @@
 	</exec>
 </target>
 
+<target name="download">
+	<masysma_require_repo masysmarepoid="bo-blake3-ada"/>
+	<masysma_require_repo masysmarepoid="bo-lz4-ada"/>
+	<masysma_require_repo masysmarepoid="bo-tar-ada"/>
+</target>
+
+<target name="build-rogue" depends="download">
+	<exec executable="gnatmake" failonerror="true">
+		<arg value="-Wall"/>
+		<arg value="-o"/>
+		<arg value="${masysma.target}"/>
+		<arg value="${masysma.target}.adb"/>
+		<arg value="-I${masysma.internal.includepath}/bo-lz4-ada/lib"/>
+		<arg value="-I${masysma.internal.includepath}/bo-blake3-ada/lib"/>
+		<arg value="-I${masysma.internal.includepath}/bo-tar-ada/lib"/>
+		<arg value="-largs"/>
+		<arg value="-lsodium"/>
+	</exec>
+</target>
+
 <!-- CONSTANT TPL IMPORT -->
 <property environment="env"/>
-<condition property="masysma.internal.includepath.rel" value="${env.MDVL_CI_PHOENIX_ROOT}" else="/data/main/120_mdvl_rr"><isset property="env.MDVL_CI_PHOENIX_ROOT"/></condition>
+<condition property="masysma.internal.includepath.rel" value="${env.MDVL_CI_PHOENIX_ROOT}" else=".."><isset property="env.MDVL_CI_PHOENIX_ROOT"/></condition>
 <property name="masysma.internal.includepath" location="${masysma.internal.includepath.rel}"/>
 <property name="masysma.internal.loadpath" value="${masysma.internal.includepath}/co-build/ant-build-template.xml"/>
 <condition property="masysma.internal.load" value="file://${masysma.internal.loadpath}" else="https://raw.githubusercontent.com/m7a/co-build/master/ant-build-template.xml"><resourceexists><file file="${masysma.internal.loadpath}"/></resourceexists></condition>
