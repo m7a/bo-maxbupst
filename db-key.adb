@@ -2,14 +2,14 @@ with Ada.Assertions;
 with Ada.Text_IO;
 
 with Blake3;
-
-with ZBase64;
 with Serde;
 
 with Bupstash_Types;
 use  Bupstash_Types;
 
-package body Bupstash_Key is
+with DB.ZBase64;
+
+package body DB.Key is
 
 	function Init(Key_File: in String) return Key is
 		Raw_Data:   Ada.Streams.Stream_Element_Array(1 .. Max_Key_Size);
@@ -46,8 +46,8 @@ package body Bupstash_Key is
 			end loop;
 		exception
 		-- this is the regular case, all other exceptions are propagated
-		when Ada.Text_IO.End_Error =>
-			ZBase64.Decode(Base_64(1 .. Length), Raw_Data, Raw_Length);
+		when Ada.Text_IO.End_Error => DB.ZBase64.Decode(Base_64(1 ..
+						Length), Raw_Data, Raw_Length);
 		end Parse_Base64_PEM;
 	begin
 		Ada.Text_IO.Open(FD, Ada.Text_IO.In_File, Key_File);
@@ -133,4 +133,4 @@ package body Bupstash_Key is
 				is (Derive_Hash_Key(K.Data_Hash_Key_Part_1,
 						K.Data_Hash_Key_Part_2));
 
-end Bupstash_Key;
+end DB.Key;

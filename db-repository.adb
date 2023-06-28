@@ -5,7 +5,7 @@ use  Ada.Directories;
 with Bupstash_Types;
 with Bupstash_Restorer;
 
-package body Bupstash_Repository is
+package body DB.Repository is
 
 	function Init(Key_File: in String; Repo_Directory: in String)
 							return Repository is
@@ -23,7 +23,7 @@ package body Bupstash_Repository is
 
 		-- TODO z not so nice that we have to duplicate this just to
 		--        satisfy the limited type requirements...
-		KTMP: constant Bupstash_Key.Key := Bupstash_Key.Init(Key_File);
+		KTMP: constant DB.Key.Key := DB.Key.Init(Key_File);
 		ST:   Search_Type;
 
 		function Init_Next_Entry return Bupstash_Item.Item is
@@ -43,7 +43,7 @@ package body Bupstash_Repository is
 		return RV: constant Repository := (N => Num_Items,
 					M => Repo_Directory'Length,
 					Root => Repo_Directory,
-					Key => Bupstash_Key.Init(Key_File),
+					Key => DB.Key.Init(Key_File),
 					It => (others => Init_Next_Entry)) do
 			End_Search(ST);
 		end return;
@@ -75,4 +75,4 @@ package body Bupstash_Repository is
 				Bupstash_Types.To_Hex(Item_XID) & "> found.";
 	end Restore;
 
-end Bupstash_Repository;
+end DB.Repository;

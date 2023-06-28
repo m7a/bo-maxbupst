@@ -1,6 +1,6 @@
-with MaXBupst_OO;
+with DB.Main;
 
 procedure MaXBupst is
 begin
-	MaXBupst_OO.Main;
+	DB.Main.Main;
 end MaXBupst;

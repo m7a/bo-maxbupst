@@ -2,7 +2,7 @@ with Ada.Streams;
 with LZ4Ada;
 with Interfaces;
 
-package Bupstash_Compression is
+package Compression is
 
 	function Decompress(Raw: in Ada.Streams.Stream_Element_Array)
 					return Ada.Streams.Stream_Element_Array;
@@ -23,4 +23,4 @@ private
 		Size: in LZ4Ada.U32) return Ada.Streams.Stream_Element_Array
 		with Pre => (Interfaces."<="(Size, Compress_Max_Size));
 
-end Bupstash_Compression;
+end Compression;

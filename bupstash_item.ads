@@ -2,7 +2,7 @@ with Ada.Streams;
 use  Ada.Streams;
 with Ada.Containers.Indefinite_Ordered_Maps;
 
-with Bupstash_Key;
+with DB.Key;
 with Bupstash_Types;
 with Bupstash_HTree_LL;
 
@@ -10,8 +10,7 @@ package Bupstash_Item is
 
 	type Item is tagged limited private;
 
-	function Init(Key: in Bupstash_Key.Key; Item_File: in String)
-								return Item;
+	function Init(Key: in DB.Key.Key; Item_File: in String) return Item;
 	procedure Print(Ctx: in Item);
 	function Has_XID(Ctx: in Item; Cmp: in Bupstash_Types.XID)
 								return Boolean;
@@ -92,7 +91,7 @@ private
 			Offset: out Ada.Streams.Stream_Element_Offset;
 			Ret: out V3_Plain_Text_Item_Metadata);
 
-	procedure Decrypt_Secret_Item_Metadata(Key: in Bupstash_Key.Key;
+	procedure Decrypt_Secret_Item_Metadata(Key: in DB.Key.Key;
 					Raw: in Stream_Element_Array;
 					Ret: out V3_Secret_Item_Metadata);
 

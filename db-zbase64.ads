@@ -6,7 +6,7 @@
 
 with Ada.Streams;
 
-package ZBase64 is
+package DB.ZBase64 is
 
   -- RFC 1521, MIME Base64 encode/decode
   -- Assumes Ada.Streams.Stream_Element is a byte.
@@ -30,4 +30,4 @@ package ZBase64 is
   -- Target'length = Output_Byte_Count + 2 * (Output_Byte_Count / 76)
   -- Constraint_Error will be raised if Target isn't long enough.
 
-end ZBase64;
+end DB.ZBase64;

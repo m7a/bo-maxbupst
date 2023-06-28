@@ -1,4 +1,4 @@
-package MaXBupst_OO is
+package DB.Main is
 
 	procedure Main;
 
@@ -13,4 +13,4 @@ private
 	procedure Run_Get(Key_File: in String; Repo_Directory: in String;
 						Selected_ID: in String);
 
-end MaXBupst_OO;
+end DB.Main;

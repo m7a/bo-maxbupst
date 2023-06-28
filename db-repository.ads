@@ -1,7 +1,7 @@
-with Bupstash_Key;
 with Bupstash_Item;
+with DB.Key;
 
-package Bupstash_Repository is
+package DB.Repository is
 
 	type Repository(N, M: Integer) is tagged limited private;
 
@@ -16,8 +16,8 @@ private
 
 	type Repository(N, M: Integer) is tagged limited record
 		Root: String(1 .. M);
-		Key:  Bupstash_Key.Key;
+		Key:  DB.Key.Key;
 		It:   Items(1 .. N);
 	end record;
 
-end Bupstash_Repository;
+end DB.Repository;

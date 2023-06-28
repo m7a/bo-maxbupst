@@ -21,7 +21,7 @@ with Blake3;
 
 package body Bupstash_Restorer is
 
-	procedure Restore(Ctx: in Bupstash_Item.Item; Key: in Bupstash_Key.Key;
+	procedure Restore(Ctx: in Bupstash_Item.Item; Key: in DB.Key.Key;
 						Data_Directory: in String) is
 	begin
 		if Ctx.Has_Index_Tree then
@@ -32,7 +32,7 @@ package body Bupstash_Restorer is
 	end Restore;
 
 	procedure Restore_With_Index(Ctx: in Bupstash_Item.Item;
-			Key: in Bupstash_Key.Key; Data_Directory: in String) is
+			Key: in DB.Key.Key; Data_Directory: in String) is
 
 		XTar: XTar_Ctx := Bupstash_XTar.Init;
 
@@ -40,8 +40,8 @@ package body Bupstash_Restorer is
 					Ctx.Init_HTree_Reader_For_Index_Tree;
 		Index_Tree_Iter: Tree_Iterator := Init(Index_Tree_LL,
 								Data_Directory);
-		Index_DCTX: Bupstash_Crypto.Decryption_Context :=
-				Bupstash_Crypto.New_Decryption_Context(
+		Index_DCTX: Crypto.Decryption.Decryption_Context :=
+				Crypto.Decryption.New_Decryption_Context(
 				Key.Get_Idx_SK, Key.Get_Idx_PSK);
 		Index_PT_Iter: Iter_Context := (HK => Key.Derive_Index_Hash_Key,
 								others => <>);
@@ -50,8 +50,8 @@ package body Bupstash_Restorer is
 				Ctx.Init_HTree_Reader_For_Data_Tree;
 		Data_Tree_Iter: Tree_Iterator := Init(Data_Tree_LL,
 								Data_Directory);
-		Data_DCTX: Bupstash_Crypto.Decryption_Context :=
-				Bupstash_Crypto.New_Decryption_Context(
+		Data_DCTX: Crypto.Decryption.Decryption_Context :=
+				Crypto.Decryption.New_Decryption_Context(
 				Key.Get_Data_SK, Key.Get_Data_PSK);
 		Data_PT_Iter: Iter_Context := (HK => Key.Derive_Data_Hash_Key,
 								others => <>);
@@ -139,20 +139,20 @@ package body Bupstash_Restorer is
 	end Restore_With_Index;
 
 	procedure For_Plaintext_Chunks(C1: in out Iter_Context;
-				C2: in out Tree_Iterator;
-				DCTX: in out Bupstash_Crypto.Decryption_Context;
-				Proc: access function(
-					Plaintext: in Stream_Element_Array;
-					Continue_Processing: out Boolean)
-				return Stream_Element_Offset) is
+			C2: in out Tree_Iterator;
+			DCTX: in out Crypto.Decryption.Decryption_Context;
+			Proc: access function(
+				Plaintext: in Stream_Element_Array;
+				Continue_Processing: out Boolean)
+			return Stream_Element_Offset) is
 
 		Continue_Processing: Boolean := True;
 
 		function Read_And_Decrypt_Chunk(Cursor: in Tree_Cursor)
 				return Stream_Element_Array is
-			PT: constant Stream_Element_Array := Bupstash_Crypto.
+			PT: constant Stream_Element_Array := Crypto.Decryption.
 					Decrypt_Data(DCTX, Element(Cursor));
-			Computed_Addr: constant Address := Bupstash_Crypto.
+			Computed_Addr: constant Address := Crypto.Decryption.
 					Keyed_Content_Address(PT, C1.HK);
 		begin
 			if Computed_Addr /= Get_Address(Cursor) then
@@ -225,7 +225,7 @@ package body Bupstash_Restorer is
 	end For_Plaintext_Chunks;
 
 	procedure Restore_Without_Index(Ctx: in Bupstash_Item.Item;
-			Key: in Bupstash_Key.Key; Data_Directory: in String) is
+			Key: in DB.Key.Key; Data_Directory: in String) is
 		Stdout: constant access Root_Stream_Type'Class :=
 						Ada.Text_IO.Text_Streams.Stream(
 						Ada.Text_IO.Standard_Output);
@@ -233,8 +233,8 @@ package body Bupstash_Restorer is
 					Ctx.Init_HTree_Reader_For_Data_Tree;
 		Data_Tree_Iter: Tree_Iterator := Init(Data_Tree_LL,
 								Data_Directory);
-		Data_DCTX: Bupstash_Crypto.Decryption_Context :=
-				Bupstash_Crypto.New_Decryption_Context(
+		Data_DCTX: Crypto.Decryption.Decryption_Context :=
+				Crypto.Decryption.New_Decryption_Context(
 				Key.Get_Data_SK, Key.Get_Data_PSK);
 		Data_PT_Iter: Iter_Context := (HK => Key.Derive_Data_Hash_Key,
 								others => <>);

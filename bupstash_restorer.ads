@@ -1,6 +1,6 @@
-with Bupstash_Key;
+with DB.Key;
 with Bupstash_Item;
-with Bupstash_Crypto;
+with Crypto.Decryption;
 with Bupstash_HTree_Iter;
 with Bupstash_Types;
 with Ada.Streams;
@@ -8,15 +8,15 @@ with Ada.Containers.Indefinite_Holders;
 
 package Bupstash_Restorer is
 
-	procedure Restore(Ctx: in Bupstash_Item.Item; Key: in Bupstash_Key.Key;
+	procedure Restore(Ctx: in Bupstash_Item.Item; Key: in DB.Key.Key;
 						Data_Directory: in String);
 
 private
 
 	procedure Restore_With_Index(Ctx: in Bupstash_Item.Item;
-			Key: in Bupstash_Key.Key; Data_Directory: in String);
+				Key: in DB.Key.Key; Data_Directory: in String);
 	procedure Restore_Without_Index(Ctx: in Bupstash_Item.Item;
-			Key: in Bupstash_Key.Key; Data_Directory: in String);
+				Key: in DB.Key.Key; Data_Directory: in String);
 
 	-- SAH := Stream Element Array Holder
 	package SAH is new Ada.Containers.Indefinite_Holders(
@@ -38,7 +38,7 @@ private
 
 	procedure For_Plaintext_Chunks(C1: in out Iter_Context;
 			C2: in out Bupstash_HTree_Iter.Tree_Iterator;
-			DCTX: in out Bupstash_Crypto.Decryption_Context;
+			DCTX: in out Crypto.Decryption.Decryption_Context;
 			Proc: access function(
 				Plaintext: in Ada.Streams.Stream_Element_Array;
 				Continue_Processing: out Boolean)

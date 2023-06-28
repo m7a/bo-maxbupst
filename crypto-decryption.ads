@@ -3,7 +3,7 @@ with Bupstash_Types;
 with Ada.Streams; -- Stream_Element_Array
 use  Ada.Streams;
 
-package Bupstash_Crypto is
+package Crypto.Decryption is
 
 	type Decryption_Context is tagged limited private;
 
@@ -37,4 +37,4 @@ private
 	with pre => (CT'Length >= (Bupstash_Types.Box_Noncebytes +
 						Bupstash_Types.Box_Macbytes));
 
-end Bupstash_Crypto;
+end Crypto.Decryption;

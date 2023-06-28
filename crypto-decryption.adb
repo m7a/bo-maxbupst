@@ -1,9 +1,8 @@
 with Blake3;
+with Crypto.ZSodium;
+with Compression;
 
-with ZSodiumBinding;
-with Bupstash_COmpression;
-
-package body Bupstash_Crypto is
+package body Crypto.Decryption is
 
 	function New_Decryption_Context(SK: in Bupstash_Types.SK;
 			PSK: in Bupstash_Types.PSK) return Decryption_Context is
@@ -24,7 +23,7 @@ package body Bupstash_Crypto is
 			Ctx.Ephemeral_BK := Box_Compute_Key(Ctx.Ephemeral_PK,
 							Ctx.SK, Ctx.PSK);
 		end if;
-		return Bupstash_Compression.Decompress(Box_Decrypt(CT(CT'First
+		return Compression.Decompress(Box_Decrypt(CT(CT'First
 			.. CT'Last - Stream_Element_Offset(
 			Bupstash_Types.Box_Publickeybytes)), Ctx.Ephemeral_BK));
 	end Decrypt_Data;
@@ -35,7 +34,7 @@ package body Bupstash_Crypto is
 	function Box_Compute_Key(PK: in Bupstash_Types.PK;
 			SK: in Bupstash_Types.SK; PSK: in Bupstash_Types.PSK)
 			return Bupstash_Types.Box_Key is
-		Unmixed: constant String := ZSodiumBinding.
+		Unmixed: constant String := Crypto.ZSodium.
 			Generate_Shared_Key_curve25519xchacha20poly1305(PK, SK);
 		Ctx: Blake3.Hasher := Blake3.Init(PSK);
 	begin
@@ -55,7 +54,7 @@ package body Bupstash_Crypto is
 		CT_Conv: String(1 .. CT_Inner'Length);
 		for CT_Conv'Address use CT_Inner'Address;
 
-		PT: constant String := ZSodiumBinding.
+		PT: constant String := Crypto.ZSodium.
 				Decrypt_Message_curve25519xchacha20poly1305(
 				CT_Conv, Key, Nonce_Conv);
 		PT_Conv: Stream_Element_Array(1 .. PT'Length);
@@ -75,4 +74,4 @@ package body Bupstash_Crypto is
 		return Ctx.Final;
 	end Keyed_Content_Address;
 
-end Bupstash_Crypto;
+end Crypto.Decryption;

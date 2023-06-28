@@ -1,7 +1,7 @@
 with Interfaces;
 with Ada.Streams;
 
-with ZSodiumBinding;
+with Crypto.ZSodium;
 
 package Bupstash_Types is
 
@@ -21,8 +21,8 @@ package Bupstash_Types is
 
 	Hash_Bytes:     constant Integer := 32; -- src/crypto.rs:
 	Box_Noncebytes: constant Integer := Integer(
-						ZSodiumBinding.cb_NONCEBYTES);
-	Box_Macbytes:   Integer renames ZSodiumBinding.cb_MACBYTES;
+						Crypto.ZSodium.cb_NONCEBYTES);
+	Box_Macbytes:   Integer renames Crypto.ZSodium.cb_MACBYTES;
 
 	subtype PK               is String(1 .. Box_Publickeybytes);
 	subtype SK               is String(1 .. Box_Secretkeybytes);

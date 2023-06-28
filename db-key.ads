@@ -1,7 +1,7 @@
 with Ada.Streams;
 with Bupstash_Types;
 
-package Bupstash_Key is
+package DB.Key is
 
 	type Key is tagged limited private;
 
@@ -104,4 +104,4 @@ private
 					in Bupstash_Types.Partial_Hash_Key)
 					return Bupstash_Types.Hash_Key;
 
-end Bupstash_Key;
+end DB.Key;

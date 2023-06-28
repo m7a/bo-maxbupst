@@ -2,7 +2,7 @@
 -- Copyright 2001 Tom Moran (tmoran@acm.org, PGP signed tmoran@bix.com),
 -- anyone may use for any purpose.
 
-package body ZBase64 is
+package body DB.ZBase64 is
 
   subtype Six_Bits is Ada.Streams.Stream_Element range 0 .. 63;
 
@@ -119,4 +119,4 @@ package body ZBase64 is
     end loop;
   end Encode;
 
-end ZBase64;
+end DB.ZBase64;

@@ -8,7 +8,7 @@ use  Lz4Ada;
 
 with Bupstash_Types;
 
-package body Bupstash_Compression is
+package body Compression is
 
 	function Decompress(Raw: in Stream_Element_Array)
 						return Stream_Element_Array is
@@ -90,4 +90,4 @@ package body Bupstash_Compression is
 		return Raw(Raw'First .. Raw'Last - 1);
 	end Unauthenticated_Decompress;
 
-end Bupstash_Compression;
+end Compression;

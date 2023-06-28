@@ -22,7 +22,7 @@ with Interfaces.C.Strings;
 -- | OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.           |
 -- +--------------------------------------------------------------------------+
 --
-package ZSodiumBinding is
+package Crypto.ZSodium is
 
 	Crypto_Error: exception;
 
@@ -70,4 +70,4 @@ private
 	pragma Import(C,
 		crypto_box_curve25519xchacha20poly1305_open_easy_afternm);
 
-end ZSodiumBinding;
+end Crypto.ZSodium;

@@ -3,9 +3,9 @@ with Ada.Command_Line;
 use  Ada.Command_Line;
 with Ada.Environment_Variables;
 
-with Bupstash_Repository;
+with DB.Repository;
 
-package body MaXBupst_OO is
+package body DB.Main is
 
 	procedure Main is
 	begin
@@ -131,18 +131,18 @@ package body MaXBupst_OO is
 	end Error_Help;
 
 	procedure Run_List(Key_File: in String; Repo_Directory: in String) is
-		Repository: constant Bupstash_Repository.Repository :=
-			Bupstash_Repository.Init(Key_File, Repo_Directory);
+		Repository: constant DB.Repository.Repository :=
+				DB.Repository.Init(Key_File, Repo_Directory);
 	begin
 		Repository.Print_Info;
 	end Run_List;
 
 	procedure Run_Get(Key_File: in String; Repo_Directory: in String;
 						Selected_ID: in String) is
-		Repository: constant Bupstash_Repository.Repository :=
-			Bupstash_Repository.Init(Key_File, Repo_Directory);
+		Repository: constant DB.Repository.Repository :=
+				DB.Repository.Init(Key_File, Repo_Directory);
 	begin
 		Repository.Restore(Selected_ID);
 	end Run_Get;
 		
-end MaXBupst_OO;
+end DB.Main;

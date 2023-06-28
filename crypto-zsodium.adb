@@ -1,4 +1,4 @@
-package body ZSodiumBinding is
+package body Crypto.ZSodium is
 
 	function Generate_Shared_Key_curve25519xchacha20poly1305(
 			Recipient_PK: Public_Box_Key; Sender_SK: Secret_Box_Key)
@@ -92,4 +92,4 @@ package body ZSodiumBinding is
 	function Plain_Text_Length(CT: in String) return Positive is
 						(CT'Length - cb_MACBYTES);
 
-end ZSodiumBinding;
+end Crypto.ZSodium;

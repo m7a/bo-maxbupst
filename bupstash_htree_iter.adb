@@ -6,7 +6,7 @@ with Ada.Directories;
 
 with Blake3;
 
-with Bupstash_Compression;
+with Compression;
 with Bupstash_HTree_LL;
 use  Bupstash_HTree_LL;
 
@@ -58,8 +58,7 @@ package body Bupstash_HTree_Iter is
 			if Opt.Is_Present then 
 				-- indentation exceeded
 				Check_Push_Level(Ctx, Opt.Height - 1, Opt.Addr,
-					Bupstash_Compression.
-					Unauthenticated_Decompress(
+					Compression.Unauthenticated_Decompress(
 					Get_Chunk(Data_Directory, Opt.Addr))); 
 			end if;
 		end Try_Tree_Traversal;

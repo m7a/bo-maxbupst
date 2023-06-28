@@ -8,12 +8,11 @@ with Ada.Directories;
 with Serde;
 with Bupstash_Types;
 use  Bupstash_Types;
-with Bupstash_Crypto;
+with Crypto.Decryption;
 
 package body Bupstash_Item is
 
-	function Init(Key: in Bupstash_Key.Key; Item_File: in String)
-								return Item is
+	function Init(Key: in DB.Key.Key; Item_File: in String) return Item is
 		FD:               File_Type;
 		Raw_Data:         Stream_Element_Array(1..Item_Buf_Size);
 		Raw_Length:       Stream_Element_Offset;
@@ -133,13 +132,13 @@ package body Bupstash_Item is
 		Offset           := S.Get_Offset;
 	end Decode_Plain_Text_Item_Metadata;
 
-	procedure Decrypt_Secret_Item_Metadata(Key: in Bupstash_Key.Key;
+	procedure Decrypt_Secret_Item_Metadata(Key: in DB.Key.Key;
 					Raw: in Stream_Element_Array;
 					Ret: out V3_Secret_Item_Metadata) is
-		Crypto: Bupstash_Crypto.Decryption_Context :=
-			Bupstash_Crypto.New_Decryption_Context(
+		Ctx: Crypto.Decryption.Decryption_Context :=
+			Crypto.Decryption.New_Decryption_Context(
 				Key.Get_Metadata_SK, Key.Get_Metadata_PSK);
-		PT: aliased Stream_Element_Array := Crypto.Decrypt_Data(Raw);
+		PT: aliased Stream_Element_Array := Ctx.Decrypt_Data(Raw);
 		type Local_Ptr is access all Stream_Element_Array;
 		package Ser is new Serde(Local_Ptr);
 		use Ser;
