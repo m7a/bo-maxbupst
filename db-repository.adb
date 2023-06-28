@@ -4,6 +4,7 @@ use  Ada.Directories;
 
 with Bupstash_Types;
 with Bupstash_Restorer;
+with Bupstash_HTree_LL;
 
 package body DB.Repository is
 
@@ -26,7 +27,7 @@ package body DB.Repository is
 		KTMP: constant DB.Key.Key := DB.Key.Init(Key_File);
 		ST:   Search_Type;
 
-		function Init_Next_Entry return Bupstash_Item.Item is
+		function Init_Next_Entry return DB.Item.Item is
 			DE: Directory_Entry_Type;
 		begin
 			if not More_Entries(ST) then
@@ -34,7 +35,7 @@ package body DB.Repository is
 					"File(s) vanished while scanning.";
 			end if;
 			Get_Next_Entry(ST, DE);
-			return Bupstash_Item.Init(KTMP, Full_Name(DE));
+			return DB.Item.Init(KTMP, Full_Name(DE));
 		end Init_Next_Entry;
 
 	begin
@@ -63,11 +64,33 @@ package body DB.Repository is
 		Item_XID: constant Bupstash_Types.XID :=
 					Bupstash_Types.From_Hex(Item_ID);
 		Data_Directory: constant String := Compose(Repo.Root, "data");
+
+		procedure Restore_With_Index(I: in DB.Item.Item) is
+			IT: Bupstash_HTree_LL.Tree_Reader :=
+					I.Init_HTree_Reader_For_Index_Tree;
+			DT: Bupstash_HTree_LL.Tree_Reader := 
+					I.Init_HTree_Reader_For_Data_Tree;
+		begin
+			Bupstash_Restorer.Restore_With_Index(IT, DT, Repo.Key,
+								Data_Directory);
+		end Restore_With_Index;
+
+		procedure Restore_Without_Index(I: in DB.Item.Item) is
+			DT: Bupstash_HTree_LL.Tree_Reader := 
+					I.Init_HTree_Reader_For_Data_Tree;
+		begin
+			Bupstash_Restorer.Restore_Without_Index(DT, Repo.Key,
+								Data_Directory);
+		end Restore_Without_Index;
 	begin
 		for I of Repo.It loop
 			if I.Has_XID(Item_XID) then
-				Bupstash_Restorer.Restore(I, Repo.Key,
-								Data_Directory);
+				-- indentation exceeded
+				if I.Has_Index_Tree then
+					Restore_With_Index(I);
+				else
+					Restore_Without_Index(I);
+				end if;
 				return;
 			end if;
 		end loop;

@@ -1,4 +1,4 @@
-with Bupstash_Item;
+with DB.Item;
 with DB.Key;
 
 package DB.Repository is
@@ -12,7 +12,7 @@ package DB.Repository is
 
 private
 
-	type Items is array (Integer range <>) of Bupstash_Item.Item;
+	type Items is array (Integer range <>) of DB.Item.Item;
 
 	type Repository(N, M: Integer) is tagged limited record
 		Root: String(1 .. M);

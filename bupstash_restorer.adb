@@ -21,23 +21,12 @@ with Blake3;
 
 package body Bupstash_Restorer is
 
-	procedure Restore(Ctx: in Bupstash_Item.Item; Key: in DB.Key.Key;
-						Data_Directory: in String) is
-	begin
-		if Ctx.Has_Index_Tree then
-			Restore_With_Index(Ctx, Key, Data_Directory);
-		else
-			Restore_Without_Index(Ctx, Key, Data_Directory);
-		end if;
-	end Restore;
-
-	procedure Restore_With_Index(Ctx: in Bupstash_Item.Item;
+	procedure Restore_With_Index(Index_Tree_LL: in out Tree_Reader;
+			Data_Tree_LL: in out Tree_Reader;
 			Key: in DB.Key.Key; Data_Directory: in String) is
 
 		XTar: XTar_Ctx := Bupstash_XTar.Init;
 
-		Index_Tree_LL: Tree_Reader := 
-					Ctx.Init_HTree_Reader_For_Index_Tree;
 		Index_Tree_Iter: Tree_Iterator := Init(Index_Tree_LL,
 								Data_Directory);
 		Index_DCTX: Crypto.Decryption.Decryption_Context :=
@@ -46,8 +35,6 @@ package body Bupstash_Restorer is
 		Index_PT_Iter: Iter_Context := (HK => Key.Derive_Index_Hash_Key,
 								others => <>);
 
-		Data_Tree_LL: Tree_Reader :=
-				Ctx.Init_HTree_Reader_For_Data_Tree;
 		Data_Tree_Iter: Tree_Iterator := Init(Data_Tree_LL,
 								Data_Directory);
 		Data_DCTX: Crypto.Decryption.Decryption_Context :=
@@ -224,13 +211,11 @@ package body Bupstash_Restorer is
 		end loop;
 	end For_Plaintext_Chunks;
 
-	procedure Restore_Without_Index(Ctx: in Bupstash_Item.Item;
+	procedure Restore_Without_Index(Data_Tree_LL: in out Tree_Reader;
 			Key: in DB.Key.Key; Data_Directory: in String) is
 		Stdout: constant access Root_Stream_Type'Class :=
 						Ada.Text_IO.Text_Streams.Stream(
 						Ada.Text_IO.Standard_Output);
-		Data_Tree_LL: Tree_Reader :=
-					Ctx.Init_HTree_Reader_For_Data_Tree;
 		Data_Tree_Iter: Tree_Iterator := Init(Data_Tree_LL,
 								Data_Directory);
 		Data_DCTX: Crypto.Decryption.Decryption_Context :=

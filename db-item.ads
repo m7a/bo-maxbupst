@@ -6,7 +6,7 @@ with DB.Key;
 with Bupstash_Types;
 with Bupstash_HTree_LL;
 
-package Bupstash_Item is
+package DB.Item is
 
 	type Item is tagged limited private;
 
@@ -100,4 +100,4 @@ private
 	function Init_HTree_Reader_For_Meta(M: in H_Tree_Metadata) return
 						Bupstash_HTree_LL.Tree_Reader;
 
-end Bupstash_Item;
+end DB.Item;

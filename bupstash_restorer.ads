@@ -1,22 +1,23 @@
 with DB.Key;
-with Bupstash_Item;
 with Crypto.Decryption;
 with Bupstash_HTree_Iter;
+with Bupstash_HTree_LL;
 with Bupstash_Types;
 with Ada.Streams;
 with Ada.Containers.Indefinite_Holders;
 
 package Bupstash_Restorer is
 
-	procedure Restore(Ctx: in Bupstash_Item.Item; Key: in DB.Key.Key;
-						Data_Directory: in String);
+	procedure Restore_With_Index(
+			Index_Tree_LL: in out Bupstash_HTree_LL.Tree_Reader;
+			Data_Tree_LL: in out Bupstash_HTree_LL.Tree_Reader;
+			Key: in DB.Key.Key; Data_Directory: in String);
+	procedure Restore_Without_Index(
+			Data_Tree_LL: in out Bupstash_HTree_LL.Tree_Reader;
+			Key: in DB.Key.Key; Data_Directory: in String);
+
 
 private
-
-	procedure Restore_With_Index(Ctx: in Bupstash_Item.Item;
-				Key: in DB.Key.Key; Data_Directory: in String);
-	procedure Restore_Without_Index(Ctx: in Bupstash_Item.Item;
-				Key: in DB.Key.Key; Data_Directory: in String);
 
 	-- SAH := Stream Element Array Holder
 	package SAH is new Ada.Containers.Indefinite_Holders(

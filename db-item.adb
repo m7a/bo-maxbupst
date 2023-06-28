@@ -10,7 +10,7 @@ with Bupstash_Types;
 use  Bupstash_Types;
 with Crypto.Decryption;
 
-package body Bupstash_Item is
+package body DB.Item is
 
 	function Init(Key: in DB.Key.Key; Item_File: in String) return Item is
 		FD:               File_Type;
@@ -169,8 +169,8 @@ package body Bupstash_Item is
 
 		procedure Print_Tag(Position: in Cursor) is
 		begin
-			Put_Line("       " & Key(Position) & ": " &
-							Element(Position));
+			Put_Line("       " & String_Ordered_Maps.Key(Position) &
+						": " & Element(Position));
 		end Print_Tag;
 	begin
 		Put_Line(" - item_id: " & To_Hex(Ctx.ID));
@@ -235,4 +235,4 @@ package body Bupstash_Item is
 						Bupstash_HTree_LL.Tree_Reader is
 			(Init_HTree_Reader_For_Meta(Ctx.Plain.Data_Tree));
 
-end Bupstash_Item;
+end DB.Item;
