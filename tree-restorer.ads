@@ -1,19 +1,19 @@
 with DB.Key;
 with Crypto.Decryption;
-with Bupstash_HTree_Iter;
-with Bupstash_HTree_LL;
+with Tree.HTree_Iter;
+with Tree.HTree_LL;
 with Bupstash_Types;
 with Ada.Streams;
 with Ada.Containers.Indefinite_Holders;
 
-package Bupstash_Restorer is
+package Tree.Restorer is
 
 	procedure Restore_With_Index(
-			Index_Tree_LL: in out Bupstash_HTree_LL.Tree_Reader;
-			Data_Tree_LL: in out Bupstash_HTree_LL.Tree_Reader;
+			Index_Tree_LL: in out Tree.HTree_LL.Tree_Reader;
+			Data_Tree_LL: in out Tree.HTree_LL.Tree_Reader;
 			Key: in DB.Key.Key; Data_Directory: in String);
 	procedure Restore_Without_Index(
-			Data_Tree_LL: in out Bupstash_HTree_LL.Tree_Reader;
+			Data_Tree_LL: in out Tree.HTree_LL.Tree_Reader;
 			Key: in DB.Key.Key; Data_Directory: in String);
 
 
@@ -26,8 +26,8 @@ private
 	use SAH;
 
 	package CH is new Ada.Containers.Indefinite_Holders(
-			Element_Type => Bupstash_HTree_Iter.Tree_Cursor,
-			"=" => Bupstash_HTree_Iter."=");
+			Element_Type => Tree.HTree_Iter.Tree_Cursor,
+			"=" => Tree.HTree_Iter."=");
 	use CH;
 
 	type Iter_Context is tagged limited record
@@ -38,11 +38,11 @@ private
 	end record;
 
 	procedure For_Plaintext_Chunks(C1: in out Iter_Context;
-			C2: in out Bupstash_HTree_Iter.Tree_Iterator;
+			C2: in out Tree.HTree_Iter.Tree_Iterator;
 			DCTX: in out Crypto.Decryption.Decryption_Context;
 			Proc: access function(
 				Plaintext: in Ada.Streams.Stream_Element_Array;
 				Continue_Processing: out Boolean)
 			return Ada.Streams.Stream_Element_Offset);
 
-end Bupstash_Restorer;
+end Tree.Restorer;

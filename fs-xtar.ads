@@ -4,8 +4,8 @@ with Ada.Text_IO;
 with Ada.Text_IO.Text_Streams;
 with Ada.Containers.Indefinite_Ordered_Maps;
 
-with Bupstash_Index;
-use  Bupstash_Index;
+with FS.Index;
+use  FS.Index;
 with Bupstash_Types;
 use  Bupstash_Types;
 
@@ -13,7 +13,7 @@ with Tar;
 with Tar.Writer;
 
 -- manages TAR data streaming
-package Bupstash_XTar is
+package FS.XTar is
 
 	type XTar_Ctx is tagged limited private;
 
@@ -66,4 +66,4 @@ private
 	function Check_Hardlink(Ctx: in out XTar_Ctx;
 				CM: in Index_Entry_Meta) return String;
 
-end Bupstash_XTar;
+end FS.XTar;

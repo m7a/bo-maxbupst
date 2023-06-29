@@ -1,4 +1,4 @@
-package body Bupstash_XTar is
+package body FS.XTar is
 
 	function Init return XTar_Ctx is (others => <>);
 
@@ -90,4 +90,4 @@ package body Bupstash_XTar is
 		Stdout.Write(Tar.Writer.End_Tar);
 	end End_Tar;
 
-end Bupstash_XTar;
+end FS.XTar;

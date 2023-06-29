@@ -7,10 +7,10 @@ with Ada.Directories;
 with Blake3;
 
 with Compression;
-with Bupstash_HTree_LL;
-use  Bupstash_HTree_LL;
+with Tree.HTree_LL;
+use  Tree.HTree_LL;
 
-package body Bupstash_HTree_Iter is
+package body Tree.HTree_Iter is
 
 	function Cursor_Has_Element(C: in Tree_Cursor) return Boolean is
 					(C.Pos <= C.Last);
@@ -134,4 +134,4 @@ package body Bupstash_HTree_Iter is
 			raise IO_Error with "Unable to read file: " & Path;
 	end Get_Chunk;
 
-end Bupstash_HTree_Iter;
+end Tree.HTree_Iter;

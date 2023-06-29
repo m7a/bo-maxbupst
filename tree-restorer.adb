@@ -6,26 +6,26 @@ with Ada.Containers;
 
 with Bupstash_Types;
 use  Bupstash_Types;
-with Bupstash_HTree_LL;
-use  Bupstash_HTree_LL;
-with Bupstash_HTree_Iter;
-use  Bupstash_HTree_Iter;
-with Bupstash_Index;
-use  Bupstash_Index;
-with Bupstash_XTar;
-use  Bupstash_XTar;
+with Tree.HTree_LL;
+use  Tree.HTree_LL;
+with Tree.HTree_Iter;
+use  Tree.HTree_Iter;
+with FS.Index;
+use  FS.Index;
+with FS.XTar;
+use  FS.XTar;
 
 with Tar;
 with Tar.Writer;
 with Blake3;
 
-package body Bupstash_Restorer is
+package body Tree.Restorer is
 
 	procedure Restore_With_Index(Index_Tree_LL: in out Tree_Reader;
 			Data_Tree_LL: in out Tree_Reader;
 			Key: in DB.Key.Key; Data_Directory: in String) is
 
-		XTar: XTar_Ctx := Bupstash_XTar.Init;
+		XTar: XTar_Ctx := Init;
 
 		Index_Tree_Iter: Tree_Iterator := Init(Index_Tree_LL,
 								Data_Directory);
@@ -92,7 +92,7 @@ package body Bupstash_Restorer is
 			Raw_Cpy: aliased Stream_Element_Array := Raw;
 
 			type Local_Ptr is access all Stream_Element_Array;
-			package IT is new Bupstash_Index.Traversal(Local_Ptr);
+			package IT is new FS.Index.Traversal(Local_Ptr);
 			Index_Iter: IT.Index_Iterator :=
 							IT.Init(Raw_Cpy'Access);
 
@@ -237,4 +237,4 @@ package body Bupstash_Restorer is
 					Data_DCTX, Write_Data_Inner'Access);
 	end Restore_Without_Index;
 
-end Bupstash_Restorer;
+end Tree.Restorer;

@@ -223,16 +223,16 @@ package body DB.Item is
 						(Ctx.Decrypted.Index_Size);
 
 	function Init_HTree_Reader_For_Index_Tree(Ctx: in Item) return
-						Bupstash_HTree_LL.Tree_Reader is
+						Tree.HTree_LL.Tree_Reader is
 			(Init_HTree_Reader_For_Meta(Ctx.Plain.Index_Tree));
 
 	function Init_HTree_Reader_For_Meta(M: in H_Tree_Metadata) return
-					Bupstash_HTree_LL.Tree_Reader is
-					(Bupstash_HTree_LL.Init(M.Height,
+					Tree.HTree_LL.Tree_Reader is
+					(Tree.HTree_LL.Init(M.Height,
 					M.Data_Chunk_Count, M.Address));
 
 	function Init_HTree_Reader_For_Data_Tree(Ctx: in Item) return
-						Bupstash_HTree_LL.Tree_Reader is
+						Tree.HTree_LL.Tree_Reader is
 			(Init_HTree_Reader_For_Meta(Ctx.Plain.Data_Tree));
 
 end DB.Item;

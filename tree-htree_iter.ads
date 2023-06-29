@@ -4,10 +4,10 @@ with Bupstash_Types;
 use  Bupstash_Types;
 with Ada.Iterator_Interfaces;
 
-with Bupstash_HTree_LL;
+with Tree.HTree_LL;
 
 -- High-Level and Iterator API
-package Bupstash_HTree_Iter is
+package Tree.HTree_Iter is
 
 	IO_Error: exception;
 
@@ -24,7 +24,7 @@ package Bupstash_HTree_Iter is
 	function Get_Address(Position: in Tree_Cursor) return Address;
 	function Element(Position: in Tree_Cursor) return Stream_Element_Array;
 
-	function Init(Ctx: in out Bupstash_HTree_LL.Tree_Reader;
+	function Init(Ctx: in out Tree.HTree_LL.Tree_Reader;
 				Data_Directory: in String) return Tree_Iterator;
 
 private
@@ -45,7 +45,7 @@ private
 	function Cursor_For_Index(Ctx: in Tree_Iterator;
 		I: in Ada.Streams.Stream_Element_Offset) return Tree_Cursor;
 
-	procedure Check_Push_Level(Ctx: in out Bupstash_HTree_LL.Tree_Reader;
+	procedure Check_Push_Level(Ctx: in out Tree.HTree_LL.Tree_Reader;
 					Height: in U64; Addr: in Address;
 					Value: in Stream_Element_Array);
 	function Get_Tree_Block_Address(Data: in Stream_Element_Array) return
@@ -53,4 +53,4 @@ private
 	function Get_Chunk(Data_Directory: in String;
 		Addr: in Bupstash_Types.Address) return Stream_Element_Array;
 
-end Bupstash_HTree_Iter;
+end Tree.HTree_Iter;

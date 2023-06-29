@@ -3,7 +3,7 @@ use  Ada.Streams;
 with Ada.Assertions;
 use  Ada.Assertions;
 
-package body Bupstash_Index is
+package body FS.Index is
 
 	package body Traversal is
 
@@ -107,4 +107,4 @@ package body Bupstash_Index is
 		end Next_Data;
 	end Traversal;
 
-end Bupstash_Index;
+end FS.Index;

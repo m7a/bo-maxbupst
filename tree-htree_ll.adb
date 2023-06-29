@@ -1,7 +1,7 @@
 with Ada.Containers;
 use  Ada.Containers;
 
-package body Bupstash_HTree_LL is
+package body Tree.HTree_LL is
 
 	function Init(Level: in U64; Data_Chunk_Count: in U64;
 					Addr: in Address) return Tree_Reader is
@@ -158,4 +158,4 @@ package body Bupstash_HTree_LL is
 	function Get_Height(Ctx: in Tree_Reader) return U64 is
 					(HO.Last_Element(Ctx.Tree_Heights));
 
-end Bupstash_HTree_LL;
+end Tree.HTree_LL;

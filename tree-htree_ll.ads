@@ -6,7 +6,7 @@ use  Bupstash_Types;
 
 -- htree.rs-compatible implementation
 -- low-level HTree interface provided by bupstash
-package Bupstash_HTree_LL is
+package Tree.HTree_LL is
 
 	type Option_Usize_Address is record
 		Is_Present: Boolean;
@@ -60,4 +60,4 @@ private
 	function Address_Slice_Vector(Vec: in BD.Vector; Offset: in U64)
 								return Address;
 
-end Bupstash_HTree_LL;
+end Tree.HTree_LL;

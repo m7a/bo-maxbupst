@@ -3,7 +3,7 @@ with Bupstash_Types;
 use  Bupstash_Types;
 with Serde;
 
-package Bupstash_Index is
+package FS.Index is
 
 	type Index_Entry_Meta(LP, LL: Integer) is limited record
 		Path:        String(1 .. LP);
@@ -67,4 +67,4 @@ package Bupstash_Index is
 							return Index_Entry_Meta;
 	end Traversal;
 
-end Bupstash_Index;
+end FS.Index;

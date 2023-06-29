@@ -3,8 +3,8 @@ with Ada.Directories;
 use  Ada.Directories;
 
 with Bupstash_Types;
-with Bupstash_Restorer;
-with Bupstash_HTree_LL;
+with Tree.Restorer;
+with Tree.HTree_LL;
 
 package body DB.Repository is
 
@@ -66,20 +66,20 @@ package body DB.Repository is
 		Data_Directory: constant String := Compose(Repo.Root, "data");
 
 		procedure Restore_With_Index(I: in DB.Item.Item) is
-			IT: Bupstash_HTree_LL.Tree_Reader :=
+			IT: Tree.HTree_LL.Tree_Reader :=
 					I.Init_HTree_Reader_For_Index_Tree;
-			DT: Bupstash_HTree_LL.Tree_Reader := 
+			DT: Tree.HTree_LL.Tree_Reader := 
 					I.Init_HTree_Reader_For_Data_Tree;
 		begin
-			Bupstash_Restorer.Restore_With_Index(IT, DT, Repo.Key,
+			Tree.Restorer.Restore_With_Index(IT, DT, Repo.Key,
 								Data_Directory);
 		end Restore_With_Index;
 
 		procedure Restore_Without_Index(I: in DB.Item.Item) is
-			DT: Bupstash_HTree_LL.Tree_Reader := 
+			DT: Tree.HTree_LL.Tree_Reader := 
 					I.Init_HTree_Reader_For_Data_Tree;
 		begin
-			Bupstash_Restorer.Restore_Without_Index(DT, Repo.Key,
+			Tree.Restorer.Restore_Without_Index(DT, Repo.Key,
 								Data_Directory);
 		end Restore_Without_Index;
 	begin
