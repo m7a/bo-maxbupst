@@ -3,6 +3,7 @@ with Ada.Directories;
 use  Ada.Directories;
 
 with Bupstash_Types;
+with Crypto.Decryption;
 with Tree.Restorer;
 with Tree.HTree_LL;
 
@@ -70,17 +71,33 @@ package body DB.Repository is
 					I.Init_HTree_Reader_For_Index_Tree;
 			DT: Tree.HTree_LL.Tree_Reader := 
 					I.Init_HTree_Reader_For_Data_Tree;
+			Index_DCTX: Crypto.Decryption.Decryption_Context :=
+				Crypto.Decryption.New_Decryption_Context(
+				Repo.Key.Get_Idx_SK, Repo.Key.Get_Idx_PSK);
+			Index_HK: constant Bupstash_Types.Hash_Key :=
+						Repo.Key.Derive_Index_Hash_Key;
+			Data_DCTX: Crypto.Decryption.Decryption_Context :=
+				Crypto.Decryption.New_Decryption_Context(
+				Repo.Key.Get_Data_SK, Repo.Key.Get_Data_PSK);
+			Data_HK: constant Bupstash_Types.Hash_Key :=
+						Repo.Key.Derive_Data_Hash_Key;
 		begin
-			Tree.Restorer.Restore_With_Index(IT, DT, Repo.Key,
-								Data_Directory);
+			Tree.Restorer.Restore_With_Index(IT, DT,
+				Index_DCTX, Index_HK, Data_DCTX, Data_HK,
+				Data_Directory);
 		end Restore_With_Index;
 
 		procedure Restore_Without_Index(I: in DB.Item.Item) is
 			DT: Tree.HTree_LL.Tree_Reader := 
 					I.Init_HTree_Reader_For_Data_Tree;
+			Data_DCTX: Crypto.Decryption.Decryption_Context :=
+				Crypto.Decryption.New_Decryption_Context(
+				Repo.Key.Get_Data_SK, Repo.Key.Get_Data_PSK);
+			Data_HK: constant Bupstash_Types.Hash_Key :=
+						Repo.Key.Derive_Data_Hash_Key;
 		begin
-			Tree.Restorer.Restore_Without_Index(DT, Repo.Key,
-								Data_Directory);
+			Tree.Restorer.Restore_Without_Index(DT, Data_DCTX,
+						Data_HK, Data_Directory);
 		end Restore_Without_Index;
 	begin
 		for I of Repo.It loop

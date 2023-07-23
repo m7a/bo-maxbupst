@@ -75,7 +75,7 @@ indepdendently from Bupstash without looking at its implementation, because
 this might greatly increase resilience in that truly different implementations
 are unlikely to contain the same bugs, making a successful data restoration more
 likely. Since the existing online documentation about Bupstash's data and crypto
-structures are _not_ comprehensive specifications, this was unfortunately not
+structures are not comprehensive specifications, this was unfortunately not
 feasible. Instead, the implementation closely follows Bupstash's in many places.
 This makes it likely that structural bugs that exist in the original Bupstash
 are present in this implementation, too.
@@ -469,12 +469,127 @@ notation for _Hash Key Part_:
 Software Design
 ===============
 
-_TODO MISSING SECTION CONTENTS_
+This section contains some notes about what I learned from reading the Bupstash
+source code. It focuses on the data structures and is completed by a diagram
+which shows the implementation maxbupst at a high-level glance.
 
 ## Bupstash's Index Structures
 
+To assiciate file contents and metadata, bupstash does the following:
+
+ * It creates two separate HTrees and iterates over both of them independently:
+   One for metadata and one for the actual file contents.
+ * To restore, it iterates over the metatadata tree which consists of a stream
+   of records.
+ * For each record, it reads out the _size_ of the respective item.
+ * If _size_ is nonzero, it reads _size_ bytes from the data tree and produces
+   them as output.
+ * Now the dasta tree cursor points to data from the next entry with data such
+   that the restore can continue by going to the next metadata item.
+ * Additional data fields allow for restoration of a subset of files. I did not
+   check this in more detail because maxbupst only implements the “full” restore
+   functionality.
+
 ## Bupstash's HTree Storage
 
-## Maxbupst in a Class Diagram
+From a restorer point of view, Bupstash stores its data as a “stream”. Instead
+of having one large file where data can be appended, a tree structure is used
+to represent the “stream”.
 
+When there is only one backup containing multiple files then there is typically
+two streams: One for metadata and one for data (see above).
 
+The storage only contains encrypted data and tree metadata. As a result, the
+HTree can be traversed without being decrypted. The actual (encrypted) data
+is contained in the leaf nodes whereas the other nodes contain unencrypted
+metadata about which other tree nodes belong to the same subtree.
+
+Bupstash's storage is “content-addressible”, i.e. the _ID_ of a tree node
+is actually the BLAKE3 hash over the concatenation of its (file) contents.
+
+As a result, an entire stream can be identified by its ID. Such a tree can
+basically be traversed as follows given the root node _ID_:
+
+ * Read the file with file name _ID_
+ * If this is already a leaf node, emit its contents as data.
+ * If this is not a leaf node, decode the contained IDs in this node and
+   continue by traversing each of the contained nodes in order
+
+To determine which nodes are leaf nodes and which not, additional metadata is
+required. This metadata is stored by bupstash as part of the backup metadata
+and not contained in any of the two (metadata and data) trees.
+
+Since there is no obvious relation between the tree nodes and the files in the
+backup, this structure is not expected to leak any sensitive information. In
+order to ensure that the trees are not tampered with, all content addresses
+must be validated by independently computing the hash over their contents and
+comparing the result with the ID they were found under.
+
+In order to save memory it makes sense to not read the entire tree into RAM.
+Rather, the list of leaf nodes is constructed while processing such that there
+is always only a few nodes loaded into RAM rather say the entire the backup
+contents.
+
+## Maxbupst Package Dependencies
+
+The following diagram shows the dependenceis between the maxbupst Ada packages.
+An arrow A -> B defines a dependency of type “A knows B”. External library
+components like Tar, Blake3 and LZ4 are shown for completeness despite not being
+contained in the maxbupst source tree.
+
+~~~
+                                                              ┌─────┐
+                                                              │ LZ4 │
+                                                              └──▲──┘
+                                                                 │
+                                                         ┌───────┴─────┐
+                                                         │ Compression │
+                                                         └───────▲─────┘
+                              ┌───────┐                          │
+         ┌───────────────────▶│ Serde │               ┌────────┐ │
+         │           ┌───────▶│       │             ╔═╡ Crypto ╞═╪══════════╗
+         │           │        └───▲▲──┘             ║ └────────┘ │          ║
+         │           │            ││   ┌────────┐   ║            │          ║
+         │   ┌────┐  │            ││   │ Blake3 │◀──╫──────┐     │          ║
+         │ ╔═╡ FS ╞══╪══════╗     ││   └───▲─▲──┘   ║      │     │          ║
+         │ ║ └────┘  │      ║     ││       │ │      ║      │     │          ║
+         │ ║         │      ║     ││       │ │      ║      │     │  ZSodium ║
+         │ ║         │      ║     │└───────┼┐│      ║      │     │      ▲   ║
+┌─────┐  │ ║         │      ║     └───────┐│││      ║      │     │      │   ║
+│ Tar │  │ ║       Index ◀──╫────────────┐││││      ║      │     │      │   ║
+└──▲──┘  │ ║         ▲      ║            │││││      ║      │     │      │   ║
+   │     │ ║         │      ║            │││││      ║   Decryption ─────┘   ║
+   └─────┼─╫─────── XTar ◀──╫────────────┤││││      ║      ▲▲               ║
+         │ ║                ║            │││││      ║      ││               ║
+         │ ╚════════════════╝            │││││      ╚══════╪╞═══════════════╝
+         │                               │││││             ││
+         │                               ││││└──────────┐  ││
+         │                               │││└──────────┐│  ││
+         │   ┌──────┐                    │││           ││  ││
+         │ ╔═╡ Tree ╞════════════════════╪╪╪═════╗     ││  ││
+         │ ║ └──────┘                    │││     ║     ││  ││
+         │ ║      ┌───────▶ HTree_LL ◀──┐│││     ║     ││  ││
+         │ ║      │            ▲        ││││     ║     ││  ││
+         │ ║  HTree_Iter       │        ││││     ║     ││  ││
+         │ ║      ▲            │        ││││     ║     ││  ││
+         │ ║      └────────────┼───── Restorer ──╫─────┼┼──┘│
+         │ ║                   │          ▲      ║     ││   │
+         │ ║                   │          │      ║     ││   │
+         │ ╚═══════════════════╪══════════╪══════╝     ││   │
+         │                     │          │            ││   │
+         └────────────────────┐│┌─────────┼────────────┼┼───┘
+                              │││         │            ││
+                     ┌────┐   │││         │            ││
+                   ╔═╡ DB ╞═══╪╞╞═════════╪════════════╪╪══════════════╗
+                   ║ └────┘   │││         │            ││              ║
+                   ║          │││         │            ││     ZBase64  ║
+                   ║          │││         │            ││        ▲     ║
+                   ║          Item        │            Key       │     ║
+                   ║           ▲          │            ▲         │     ║
+                   ║           └─────── Repository ────┴─────────┘     ║
+                   ║                      ▲                            ║
+                   ║                      │                            ║
+                   ║                     Main                          ║
+                   ║                                                   ║
+                   ╚═══════════════════════════════════════════════════╝
+~~~

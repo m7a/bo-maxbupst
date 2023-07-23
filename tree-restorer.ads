@@ -1,4 +1,3 @@
-with DB.Key;
 with Crypto.Decryption;
 with Tree.HTree_Iter;
 with Tree.HTree_LL;
@@ -11,10 +10,16 @@ package Tree.Restorer is
 	procedure Restore_With_Index(
 			Index_Tree_LL: in out Tree.HTree_LL.Tree_Reader;
 			Data_Tree_LL: in out Tree.HTree_LL.Tree_Reader;
-			Key: in DB.Key.Key; Data_Directory: in String);
+			Index_DCTX: in out Crypto.Decryption.Decryption_Context;
+			Index_HK: in Bupstash_Types.Hash_Key;
+			Data_DCTX: in out Crypto.Decryption.Decryption_Context;
+			Data_HK: in Bupstash_Types.Hash_Key;
+			Data_Directory: in String);
 	procedure Restore_Without_Index(
 			Data_Tree_LL: in out Tree.HTree_LL.Tree_Reader;
-			Key: in DB.Key.Key; Data_Directory: in String);
+			Data_DCTX: in out Crypto.Decryption.Decryption_Context;
+			Data_HK: in Bupstash_Types.Hash_Key;
+			Data_Directory: in String);
 
 
 private

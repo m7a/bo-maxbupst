@@ -23,25 +23,19 @@ package body Tree.Restorer is
 
 	procedure Restore_With_Index(Index_Tree_LL: in out Tree_Reader;
 			Data_Tree_LL: in out Tree_Reader;
-			Key: in DB.Key.Key; Data_Directory: in String) is
+			Index_DCTX: in out Crypto.Decryption.Decryption_Context;
+			Index_HK: in Bupstash_Types.Hash_Key;
+			Data_DCTX: in out Crypto.Decryption.Decryption_Context;
+			Data_HK: in Bupstash_Types.Hash_Key;
+			Data_Directory: in String) is
 
 		XTar: XTar_Ctx := Init;
-
 		Index_Tree_Iter: Tree_Iterator := Init(Index_Tree_LL,
 								Data_Directory);
-		Index_DCTX: Crypto.Decryption.Decryption_Context :=
-				Crypto.Decryption.New_Decryption_Context(
-				Key.Get_Idx_SK, Key.Get_Idx_PSK);
-		Index_PT_Iter: Iter_Context := (HK => Key.Derive_Index_Hash_Key,
-								others => <>);
-
+		Index_PT_Iter: Iter_Context := (HK => Index_HK, others => <>);
 		Data_Tree_Iter: Tree_Iterator := Init(Data_Tree_LL,
 								Data_Directory);
-		Data_DCTX: Crypto.Decryption.Decryption_Context :=
-				Crypto.Decryption.New_Decryption_Context(
-				Key.Get_Data_SK, Key.Get_Data_PSK);
-		Data_PT_Iter: Iter_Context := (HK => Key.Derive_Data_Hash_Key,
-								others => <>);
+		Data_PT_Iter: Iter_Context := (HK => Data_HK, others => <>);
 	
 		procedure Write_Data(TE: in out Tar.Writer.Tar_Entry;
 				D: in Index_Entry_Data; Ent_SIze: in U64) is
@@ -212,17 +206,15 @@ package body Tree.Restorer is
 	end For_Plaintext_Chunks;
 
 	procedure Restore_Without_Index(Data_Tree_LL: in out Tree_Reader;
-			Key: in DB.Key.Key; Data_Directory: in String) is
+			Data_DCTX: in out Crypto.Decryption.Decryption_Context;
+			Data_HK: in Bupstash_Types.Hash_Key;
+			Data_Directory: in String) is
 		Stdout: constant access Root_Stream_Type'Class :=
 						Ada.Text_IO.Text_Streams.Stream(
 						Ada.Text_IO.Standard_Output);
 		Data_Tree_Iter: Tree_Iterator := Init(Data_Tree_LL,
 								Data_Directory);
-		Data_DCTX: Crypto.Decryption.Decryption_Context :=
-				Crypto.Decryption.New_Decryption_Context(
-				Key.Get_Data_SK, Key.Get_Data_PSK);
-		Data_PT_Iter: Iter_Context := (HK => Key.Derive_Data_Hash_Key,
-								others => <>);
+		Data_PT_Iter: Iter_Context := (HK => Data_HK, others => <>);
 
 		function Write_Data_Inner(Raw: in Stream_Element_Array;
 						Continue_Proc: out Boolean)
