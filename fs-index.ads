@@ -48,7 +48,8 @@ package FS.Index is
 		-- Do not "skip" reading the X_Attrs when present. This
 		-- internally advances the processing of the serde structure!
 		function Init(Ptr: in Local_Ptr) return Index_Iterator;
-		function Has_Next(It: in Index_Iterator) return Boolean;
+		function Get_Num_Processed(It: in Index_Iterator)
+				return Ada.Streams.Stream_Element_Offset;
 		function Next(It: in out Index_Iterator)
 						return Index_Entry_Meta;
 		function Next_X_Attr_Key(It: in out Index_Iterator)

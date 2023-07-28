@@ -87,30 +87,21 @@ package body Tree.Restorer is
 
 			type Local_Ptr is access all Stream_Element_Array;
 			package IT is new FS.Index.Traversal(Local_Ptr);
-			Index_Iter: IT.Index_Iterator :=
-							IT.Init(Raw_Cpy'Access);
+			Index_Dec: IT.Index_Iterator := IT.Init(Raw_Cpy'Access);
 
-			procedure Process_Next_Meta_Entry is
-				CM: Index_Entry_Meta := Index_Iter.Next;
-				TE: Tar.Writer.Tar_Entry :=
+			CM: constant Index_Entry_Meta := Index_Dec.Next;
+			TE: Tar.Writer.Tar_Entry :=
 					XTar.Begin_Entry_From_Metadata(CM);
-			begin
-				for I in 1 .. CM.Num_X_Attrs loop
-					TE.Add_X_Attr(
-						Index_Iter.Next_X_Attr_Key,
-						Index_Iter.Next_X_Attr_Value
-					);
-				end loop;
-				XTar.Begin_Entry(TE);
-				Write_Data(TE, Index_Iter.Next_Data, CM.Size);
-				XTar.End_Entry(TE);
-			end Process_Next_Meta_Entry;
 		begin
-			while Index_Iter.Has_Next loop
-				Process_Next_Meta_Entry;
+			for I in 1 .. CM.Num_X_Attrs loop
+				TE.Add_X_Attr(Index_Dec.Next_X_Attr_Key,
+						Index_Dec.Next_X_Attr_Value);
 			end loop;
+			XTar.Begin_Entry(TE);
+			Write_Data(TE, Index_Dec.Next_Data, CM.Size);
+			XTar.End_Entry(TE);
 			Continue_Proc := True; -- always process next
-			return Raw'Length;
+			return Index_Dec.Get_Num_Processed;
 		end Process_Index_Chunk;
 
 	begin

@@ -10,8 +10,9 @@ package body FS.Index is
 		function Init(Ptr: in Local_Ptr) return Index_Iterator is
 				(Data => Ptr, S_Ctx => S.Init(Ptr));
 
-		function Has_Next(It: in Index_Iterator) return Boolean is
-				(It.S_Ctx.Get_Offset < It.Data.all'Last);
+		function Get_Num_Processed(It: in Index_Iterator)
+				return Stream_Element_Offset is
+				(It.S_Ctx.Get_Offset - It.Data.all'First);
 
 		function Next(It: in out Index_Iterator)
 						return Index_Entry_Meta is

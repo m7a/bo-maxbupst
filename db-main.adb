@@ -43,10 +43,10 @@ package body DB.Main is
 					" -g|get  [-k KEY] [-r REPO] -i ID");
 		Put_Line("        Restore backup. Append `| tar -x`.");
 		New_Line;
-		Put_Line("Environment variable BUPSTASH_KEY can supply value " &
-					"for KEY.");
+		Put_Line("Environment variable BUPSTASH_KEY can supply " &
+					"the value for KEY.");
 		Put_Line("Environment variable BUPSTASH_REPOSITORY can " &
-					"supply value for REPO.");
+					"supply the value for REPO.");
 		New_Line;
 		Put_Line("Arguments take precedence over environment.");
 	end Help;
