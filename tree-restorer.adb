@@ -72,10 +72,10 @@ package body Tree.Restorer is
 				Computed := HCTX.Final;
 				if Computed /= D.Hash_Val then
 					raise Corrupt_Or_Tampered_Data_Error
-						with "Hash mismatch. Expected "
+						with "Hash mismatch. Expected <"
 						& To_Hex(D.Hash_Val) &
-						" but computed " &
-						To_Hex(Computed);
+						">, computed <" &
+						To_Hex(Computed) & ">";
 				end if;
 			end if;
 		end Write_Data;
@@ -102,6 +102,13 @@ package body Tree.Restorer is
 			XTar.End_Entry(TE);
 			Continue_Proc := True; -- always process next
 			return Index_Dec.Get_Num_Processed;
+		exception
+			when others =>
+				Ada.Text_IO.Put_Line(Ada.Text_IO.Standard_Error,
+					"Error while processing " &
+					"entry <" & CM.Path & ">, size=" &
+					U64'Image(CM.Size));
+				raise;
 		end Process_Index_Chunk;
 
 	begin

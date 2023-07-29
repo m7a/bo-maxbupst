@@ -1,7 +1,5 @@
 with Ada.Streams.Stream_IO;
 use  Ada.Streams.Stream_IO;
-with Ada.Assertions;
-use  Ada.Assertions;
 with Ada.Directories;
 
 with Blake3;
@@ -62,17 +60,50 @@ package body Tree.HTree_Iter is
 					Get_Chunk(Data_Directory, Opt.Addr))); 
 			end if;
 		end Try_Tree_Traversal;
-	begin
-		while Has_Height(Ctx) loop -- rust None/Some(_)
-			if Get_Height(Ctx) = 0 then -- rust Some(0)
-				return Process_Addresses(Pop_Level(Ctx));
-			else -- rust Some(_)
-				Try_Tree_Traversal;
+
+		-- Unlike the original implementation, this one currently
+		-- assembles one array of _all_ the addresses. This has multiple
+		-- disadvantages:
+		--
+		--  * As currently written, it copies the data needlessly,
+		--    mkaing the initial assemblage of the array quite
+		--    slow.
+		--
+		--  * All of the addresses are effectively loaded in memory.
+		--    This RAM usage is inefficient and limits the overall
+		--    size of backups that can be processed.
+		--    For a 100 GiB backup, about 200 MiB of RAM were necessary
+		--    in prelimianry tests. This should be OK in practice and is
+		--    still much more efficient than JMBB
+		--
+		-- To fix this, either switch to a pipelined approach where
+		-- chunks are continuously loaded by one component and consumed
+		-- by another component such that the iteration can have all
+		-- the complexity it wants or alternatively implement some sort
+		-- of nested iteration scheme with a "Stash/Cursor" scheme
+		-- i.e. generalize the implementation from the tree-restorer.adb
+		-- apropriately. None of these solutions are exactly easy to
+		-- implement in the current design...
+		function Flatten_Addresses_Recursively(
+						Prefix: in Stream_Element_Array)
+						return Stream_Element_Array is
+		begin
+			if Has_Height(Ctx) then
+				if Get_Height(Ctx) = 0 then
+					return Flatten_Addresses_Recursively(
+						Prefix & Pop_Level(Ctx));
+				else
+					Try_Tree_Traversal;
+					return Flatten_Addresses_Recursively(
+						Prefix);
+				end if;
+			else
+				return Prefix;
 			end if;
-		end loop;
-		raise Assertion_Error with
-					"HTree incomplete. Has_Height=False, " &
-					"but Get_Height was not observed as 0.";
+		end Flatten_Addresses_Recursively;
+	begin
+		return Process_Addresses(Flatten_Addresses_Recursively(
+						Null_Stream_Element_Array));
 	end Init;
 
 	-- Rust calls `on_chunk` here but since this implementation does

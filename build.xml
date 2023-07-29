@@ -6,6 +6,7 @@
 <target name="masysma_internal_build_ada">
 	<exec executable="gnatmake" failonerror="true">
 		<arg value="-Wall"/>
+		<arg value="-O3"/>
 		<arg value="-o"/>
 		<arg value="${masysma.target}"/>
 		<arg value="${masysma.target}.adb"/>
@@ -32,6 +33,7 @@
 <target name="build-rogue" depends="download">
 	<exec executable="gnatmake" failonerror="true">
 		<arg value="-Wall"/>
+		<arg value="-O3"/>
 		<arg value="-o"/>
 		<arg value="${masysma.target}"/>
 		<arg value="${masysma.target}.adb"/>
