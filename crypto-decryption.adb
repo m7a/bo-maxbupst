@@ -70,7 +70,9 @@ package body Crypto.Decryption is
 		for Data_Conv'Address use Data'Address;
 		Ctx: Blake3.Hasher := Blake3.Init(Key);
 	begin
-		Ctx.Update(Data_Conv);
+		if Data'Length > 0 then
+			Ctx.Update(Data_Conv);
+		end if;
 		return Ctx.Final;
 	end Keyed_Content_Address;
 

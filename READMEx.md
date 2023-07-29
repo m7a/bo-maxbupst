@@ -24,7 +24,7 @@ Introduction
 
 In [backup_tests_borg_bupstash_kopia(37)](../37/backup_tests_borg_bupstash_kopia.xhtml)
 multiple modern backup programs were tested as potential replacements for
-[jmbb(32)](../32/jmbb.xhtml). There, it was concluded that Bupstash is a most
+[jmbb(32)](../32/jmbb.xhtml). There, the conclusion was that Bupstash is a most
 viable replacement for JMBB.
 
 One problem of the modern backup tools is that due to their advanced features
@@ -47,7 +47,7 @@ JMBB, which is less modern a tool, has a design that tries to mitigate these
 risks by being based on formats that can be decoded by combining multiple
 third-party tools (aescrypt, cpio, xz) for restoring the backup contents
 although the restoration process may be slow and slightly off (in that
-restored data can contain files that were deleted from the original data).
+restored data can contain files that were deleted in a recent backup).
 
 For using any of the more modern alternatives like Bupstash it seems it would
 be best if there were multiple ways to restore a backup, too. To achieve this,
@@ -202,10 +202,10 @@ to be setup first. The following steps give a rough guide that worked for me:
 
  1. Install chocolatey if not already installed in an administrative powershell.
     `Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))`
-    Details: command from https://chocolatey.org/install “individual” variant.
+    Details: command from <https://chocolatey.org/install> “individual” variant.
     Test by running `choco`. It should print out a version.
- 2. In the same shell, install git `choco install git`. The tool becomes
-    available in newly created shells afterwards.
+ 2. In the same shell, install git `choco install git`.
+    The tool becomes available in newly created shells afterwards.
  3. Install ant and its dependencies:
     `choco install microsoft-openjdk` and then `choco install ant`
     Further info: <https://community.chocolatey.org/packages/ant>,
@@ -221,11 +221,11 @@ to be setup first. The following steps give a rough guide that worked for me:
     `.\alr toolchain --select`. Chose `gnat_native` and a recent gprbuild.
     Try out `gnatmake` to check if the command is available.
  9. Add Alire's toolchain to your PATH
-    `${env:PATH} = "${env:PATH};${env:USERPROFILE%}\.config\alire\cache\dependencies\gnat_native_12.2.1_c210a022\bin"`
+    `${env:PATH} = "${env:PATH};${env:USERPROFILE}\.config\alire\cache\dependencies\gnat_native_12.2.1_c210a022\bin"`
     (adjust version to your installation)
  10. Get Libsodium <https://download.libsodium.org/libsodium/releases/>
-     Download the filw eith `-msvc.zip` and extract the `libsodium.dll` for
-     your architecture. Copy it to `bo-maxbupst`.
+     Download the file with suffix `-msvc.zip` and extract the `libsodium.dll`
+     for your architecture. Copy it to `bo-maxbupst`.
 
 Now you should be ready to compile the “rogue” variant (others are not
 supported on Windows):
@@ -305,6 +305,44 @@ thus require different processing.
 
 	maxbupst -l -k testdata/maxbupst-testkey.key -r testdata/small-0.10.3
 
+Run Advanced Tests
+==================
+
+Testing Backup software correctly is not all that easy. Even for a mere
+“restore” the only real test is: Does it restore the real production data of
+interest. Tests with production data are always difficult to conduct for
+multiple reasons: Data under consideration may be large, confidential and a
+restore must not interfere with the productive systems' operations.
+
+Hence the testing for maxbupst is threefold:
+
+ 1. A simple restore test can be found in script `test_with_testdata.sh`. It
+    really just tries to restore known files from a tiny repository supplied
+    as part of the maxbupst source code. After compiling `maxbupst` and having
+    a `maxbupst` binary in the repository's directory, it can be run as-is
+    without any additional configuration being required.
+ 2. A synthetic test based on Bupstash's `cli-tests` test suite. This one is
+    nice because it makes use of Bupstash's own test cases although it cannot
+    run all of them. It works by downloading the test definitions from the
+    Bupstash repository, editing them to replace `bupstash get` instances with
+    `maxbupst` and then running a sensible subset of the tests. If you used
+    `ant` to compile `maxbupst`, the necessary prerequisites for the script to
+    work may already be present. Additionally, package `bats` must be installed
+    for the script to be able to run the Bupstash tests. The script does not
+    take any parameters and can be run as-is then.
+ 3. The test with productive data. This one cannot run without additional
+    configuration by the user. Also, given how long it can take to complete its
+    invocation is organized in multiple stages such that one can perform
+    one stage after each other or independent stages in parallel even. To avoid
+    messing with the production data, it is intended that they are copied to
+    a working directory for the tests. You must read and adapt the source code
+    of the script and provide configuration in an `.env` file or environment
+    variables prior to being able to use this script. At least, a custom step
+    for stage `s1` and the following variables are required:
+     * `MAXBT_PROD_SOURCE_DATA` a list of the source directories to use
+     * `BUPSTASH_KEY` and `BUPSTASH_REPOSITORY` with your production key and
+       repository.
+
 Bupstash's Cryptosystem
 =======================
 
@@ -367,7 +405,7 @@ Index Keys
 Data Keys
 :   Data is the actual backup contents. For restoration purposes, it can be
     thought of as an opaque stream of bytes. If multiple files are contained
-    within the backup, the _index_ is used to associated suitable chunks of the
+    within the backup, the _index_ is used to associate suitable chunks of the
     data stream to the individual files. The keys prefixed `Data_` are used
     to protect the backup contents.
 
@@ -425,8 +463,8 @@ It is then asserted that the computed address corresponds to the address
 specified in the tree. The concatenation of all decrypted plaintext chunks then
 forms the contents of the index and data respectively.
 
-Graphically, this scheme can be drawn as follows with HKP serving as a short
-notation for _Hash Key Part_:
+Graphically, this scheme can be drawn as follows with HKP1 and HKP2 serving as a
+shorthand notation for _Key Part 1_ and _Key Part 2_ of the Hash Key:
 
 	Chunk                                    Key
 	+-------+----------------------+----+    +----+-----+------+------+
@@ -528,11 +566,14 @@ comparing the result with the ID they were found under.
 In order to save memory it makes sense to not read the entire tree into RAM.
 Rather, the list of leaf nodes is constructed while processing such that there
 is always only a few nodes loaded into RAM rather say the entire the backup
-contents.
+contents. The Maxbupst implementation simplifies this a little in that it reads
+all of the leaf nodes' addresses into RAM and holds them there while restoring
+the backup. While this is a waste of memory, it is also the easiest variant that
+could be implemented.
 
 ## Maxbupst Package Dependencies
 
-The following diagram shows the dependenceis between the maxbupst Ada packages.
+The following diagram shows the dependencies between the maxbupst Ada packages.
 An arrow A -> B defines a dependency of type “A knows B”. External library
 components like Tar, Blake3 and LZ4 are shown for completeness despite not being
 contained in the maxbupst source tree.
