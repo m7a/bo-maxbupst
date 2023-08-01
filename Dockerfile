@@ -13,9 +13,11 @@ RUN	:; \
 		> /etc/apt/sources.list; \
 	apt-get update; \
 	apt-get -y dist-upgrade; \
-	apt-get -y install ant git gnat diffoscope rsync openssh-client \
-				libsodium-dev yq pv; \
+	apt-get -y install ant git gnat rsync openssh-client libsodium-dev yq \
+		pv tmux; \
 	useradd -u 1000 -m backuptest; \
+	echo ZXhwb3J0IFBTMT0nXFtcMDMzWzM2OzQwOzFtXF1cSDpcd1wkXFtcMDMzXTA7XEg6XHdcJFwwMDdcMDMzWzAwbVxdICcK | base64 -d > /etc/profile.d/prompt.sh; \
+	echo set-window-option -g mode-keys vi > /etc/tmux.conf; \
 	:;
 COPY	--chown=1000:1000 . /home/backuptest/src
 USER	backuptest
@@ -26,5 +28,4 @@ RUN	:; \
 	:;
 USER	root
 RUN	install -m 755 /home/backuptest/src/maxbupst /usr/local/bin/maxbupst
-USER	backuptest
-CMD	["/bin/bash"]
+CMD	["/bin/tail", "-f", "/dev/null"]
