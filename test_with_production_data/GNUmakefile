@@ -17,24 +17,15 @@ SNIPPET_REQUIRE_CLEAN_DESTDIR = ! [ -d "$$destdir" ] || rm -rf "$$destdir"; \
 	mkdir "$$destdir"
 
 help:
-	@echo "Ma_Sys.ma Bupstash Extractor Test with Prod. Data (c) 2023 Ma_Sys.ma <info@masysma.net>"
-	@echo
-	@echo Configure this through file env.mk and set the following required variables:
-	@echo
-	@echo "MAXBT_PROD_SOURCE_DATA = $(MAXBT_PROD_SOURCE_DATA)"
-	@echo "BUPSTASH_KEY           = $(BUPSTASH_KEY)"
-	@echo "BUPSTASH_REPOSITORY    = $(BUPSTASH_REPOSITORY)"
-	@echo "(derived SSH_SOURCE)   = $(SSH_SOURCE)"
-	@echo
-	@echo Optionally provide the following variables:
-	@echo
-	@echo "MAXBT_CONTAINER_NAME   = $(MAXBT_CONTAINER_NAME)"
-	@echo "MAXBT_IMAGE_NAME       = $(MAXBT_IMAGE_NAME)"
-	@echo "MA_DEBIAN_MIRROR       = $(MA_DEBIAN_MIRROR)"
-	@echo "MAXBT_PROD_SOURCE_DATA = $(MAXBT_PROD_SOURCE_DATA)"
-	@echo
-	@echo Provided targets
-	@echo
+	@sed    -e 's#$$(MAXBT_PROD_SOURCE_DATA)#$(MAXBT_PROD_SOURCE_DATA)#g' \
+		-e 's#$$(BUPSTASH_KEY)#$(BUPSTASH_KEY)#g' \
+		-e 's#$$(BUPSTASH_REPOSITORY)#$(BUPSTASH_REPOSITORY)#g' \
+		-e 's#$$(SSH_SOURCE)#$(SSH_SOURCE)#g' \
+		-e 's#$$(MAXBT_LOCAL_TMP)#$(MAXBT_LOCAL_TMP)#g' \
+		-e 's#$$(MAXBT_CONTAINER_NAME)#$(MAXBT_CONTAINER_NAME)#g' \
+		-e 's#$$(MAXBT_IMAGE_NAME)#$(MAXBT_IMAGE_NAME)#g' \
+		-e 's#$$(MA_DEBIAN_MIRROR)#$(MA_DEBIAN_MIRROR)#g' \
+		< README.txt
 
 s1_update_backup.txt:
 	/usr/lib/mahalt.d/30-run-bupstash.sh 2>&1 | tee ${@:.txt=.log}
@@ -81,6 +72,7 @@ s6_run_docker.txt: s2_create_directory.txt s5_build_docker.txt
 s7_start_docker.txt: s6_run_docker.txt
 	docker inspect "$(MAXBT_CONTAINER_NAME)"
 	-docker start "$(MAXBT_CONTAINER_NAME)" 2>&1 | tee ${@:.txt=.log}
+	mv ${@:.txt=.log} $@
 
 # TODO BUG item="$$(maxbupst -l | yq -r ".items[-1].item_id")";
 s8_restore_maxbupst.txt: s4_download_repo.txt s7_start_docker.txt
@@ -138,3 +130,16 @@ s13_tarcompare_bupstash.txt: s4_download_repo.txt s7_start_docker.txt
 all: s10_diff_ru_maxbupst.txt s11_diff_ru_bupstash.txt \
 			s12_tarcompare_maxbupst.txt s13_tarcompare_bupstash.txt
 	@echo OPERATION COMPLETED SUCCESSFULLY
+
+dist-clean:
+	-rm s1_update_backup.txt s2_create_directory.txt s3_copy_data.txt \
+		s4_download_repo.txt s5_build_docker.txt s6_run_docker.txt \
+		s7_start_docker.txt s8_restore_maxbupst.txt \
+		s9_restore_bupstash.txt s10_diff_ru_maxbupst.txt \
+		s11_diff_ru_bupstash.txt s12_tarcompare_maxbupst.txt \
+		s13_tarcompare_bupstash.txt s1_update_backup.log \
+		s2_create_directory.log s3_copy_data.log s4_download_repo.log \
+		s5_build_docker.log s6_run_docker.log s7_start_docker.log \
+		s8_restore_maxbupst.log s9_restore_bupstash.log \
+		s10_diff_ru_maxbupst.log s11_diff_ru_bupstash.log \
+		s12_tarcompare_maxbupst.log s13_tarcompare_bupstash.log
