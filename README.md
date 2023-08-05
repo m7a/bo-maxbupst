@@ -644,8 +644,18 @@ contained in the maxbupst source tree.
                    ╚═══════════════════════════════════════════════════╝
 ~~~
 
+History
+=======
+
+Subdirectory `testcpp` contains a previous attempt to write such a thing in C++
+(as an exercise to get to know modern C++ better). After the necessity for
+learning more C++ broke away, a rewrite was performed in Ada.
+
 Future Directions
 =================
 
-Currently, only Bupstash v0.10.3 is supported.
-Is intended to add support for a newer version in the future.
+ * Currently, only Bupstash v0.10.3 is supported.
+   Is intended to add support for a newer version in the future.
+ * The Ma_Sys.ma CI cannot build this. As a workaround one can install the
+   library dependencies into the build container. To fix this the best solution
+   would be to replace the Ma_Sys.ma CI by something better.
