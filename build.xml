@@ -1,7 +1,32 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project default="build">
 
+<!-- APPLICATION METADATA -->
 <property name="masysma.target" value="maxbupst"/> 
+<property name="mdpc.name"      value="mdvl-maxbupst"/>
+<property name="mdpc.section"   value="admin"/>
+<!-- currently restricted due to dependencies being on amd64 only -->
+<property name="mdpc.arch"      value="amd64"/>
+<property name="mdpc.descrs"    value="Ma_Sys.ma Bupstash Extractor"/>
+<property name="mdpc.depends"   value="$${shlibs:Depends}, liblz4-ada-dev, libblake3-ada-dev, libtar-ada-dev"/>
+<property name="mdpc.descrl">
+ The Ma_Sys.ma Bupstash Extractor (command `maxbupst`) is an alternative tool
+ to Bupstash's extraction function (`bupstash get`, package `mdvl-bupstash`).
+ .
+ This implementation is written in Ada rather than Rust and only supports
+ full restores. It is intended to be an alternative that is easier to compile.
+ .
+ In case of doubt it is advised to prefer `bupstash` over `maxbupst`.
+</property>
+
+<property name="mdpc.file.install">
+maxbupst /usr/bin
+</property>
+
+<!-- CI INTEGRATION -->
+<target name="package_triggered" depends="package">
+	<property name="masysma.ci.trigger" value="newver"/>
+</target>
 
 <target name="masysma_internal_build_ada">
 	<exec executable="gnatmake" failonerror="true">

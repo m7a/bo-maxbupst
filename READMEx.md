@@ -66,7 +66,7 @@ implementation does not support all of the data structure revisions. Instead
 it focuses on the structures that were used by specific versions of Bupstash
 that were used productively by the Ma_Sys.ma i.e. some arbitrary set of
 versions is supported. See the table under _Supported Versions_ for details.
-The idea is that if you only ever switch from one listed bupstash versions to
+The idea is that if you only ever switch from one listed Bupstash versions to
 another one then the resulting backup data structures are restorable by the
 newest Maxbupstash revision.
 
@@ -134,7 +134,7 @@ Compilation
 
 Some of Bupstash's required dependencies were found to not have any Ada
 equivalent readily available. Specifically, the following programs seemed not
-to be available in the Ada world: LZ4, Blake3 and TAR Achive creation.
+to be available in the Ada world: LZ4, Blake3 and TAR Archive creation.
 
 To provide these features, dedicated separate libraries were thus developed as
 part of the Maxbupst development. Their pages are here:
@@ -155,13 +155,14 @@ details.
 The primary intended use case is to build all of the libraries as separate
 Debian packages, install them on the running Debian system and then compile
 maxbupst and also install it as a Debian package. If the necessary dependencies
-like `ant` and `devscripts` are installed, this can be achieved by running
+like `ant`, `gnat-12` and `devscripts` are installed, this can be achieved by
+running
 
 	ant package
 
 in all of the dependencies' individual directories, then installing all of the
 resulting packages like e.g. with `apt install ./...deb` and then compiling
-`maxbupst` with the same command in the repsitory checkout:
+`maxbupst` with the same command in the repository checkout:
 
 	ant package
 
@@ -177,7 +178,8 @@ target:
 	ant build-rogue
 
 This automatically downloads the required Ma_Sys.ma dependencies next to the
-current repository checkout.
+current repository checkout and statically links all of them into the single
+`maxbupst` binary output.
 
 ## To test that the tool runs
 
@@ -216,7 +218,7 @@ to be setup first. The following steps give a rough guide that worked for me:
     <https://github.com/alire-project/alire/releases/>
     Download e.g. `alr-1.2.2-bin-x86_64-windows.zip`. Copy `alr.exe` to
     `bo-maxbupst`.
- 7. Switch directory:`cd bo-maxbupst`
+ 7. Switch directory: `cd bo-maxbupst`
  8. Run Alire to install the GNAT compiler. Select not to install msys2.
     `.\alr toolchain --select`. Chose `gnat_native` and a recent gprbuild.
     Try out `gnatmake` to check if the command is available.
@@ -305,6 +307,11 @@ thus require different processing.
 
 	maxbupst -l -k testdata/maxbupst-testkey.key -r testdata/small-0.10.3
 
+## Bugs
+
+The order of items as retrieved by `-l` is file-system dependent and does not
+properly reflect the order of creation.
+
 Run Advanced Tests
 ==================
 
@@ -335,13 +342,15 @@ Hence the testing for maxbupst is threefold:
     invocation is organized in multiple stages such that one can perform
     one stage after each other or independent stages in parallel even. To avoid
     messing with the production data, it is intended that they are copied to
-    a working directory for the tests. You must read and adapt the source code
-    of the script and provide configuration in an `.env` file or environment
-    variables prior to being able to use this script. At least, a custom step
-    for stage `s1` and the following variables are required:
-     * `MAXBT_PROD_SOURCE_DATA` a list of the source directories to use
-     * `BUPSTASH_KEY` and `BUPSTASH_REPOSITORY` with your production key and
-       repository.
+    a working directory for the tests. These tests are contained in
+    subdirectory `test_with_production_data` and implemented in a GNU Makefile.
+    Run `make -C test_with_production_data help` to display information about
+    the variables and targets available. The broad idea is that you provide
+    an `env.mk` in that directory to set `MAXBT_PROD_SOURCE_DATA` and your
+    repository access data. Then you edit the `s1_update_backup.txt` target to
+    your needs and finally run `make -C test_with_production_data -j all` to
+    perform the end-to-end test. As additional dependencies, this test requires
+    `docker`, GNU `make`, GNU `tar` and `diff`.
 
 Bupstash's Cryptosystem
 =======================
@@ -372,8 +381,8 @@ during backup creation and not needed for data restoration. The remainder of
 the structure's entries are used for restoration and explained in the following.
 
 Note that this is _my_ understanding as a reader of the source code rather than
-the inventor of Bupstash itself. Feel free to point out any parts where I
-understood the hierarchy wrongly.
+the inventor of Bupstash. Feel free to point out any parts where I understood
+the hierarchy wrongly.
 
 Different keys are used to encrypt different parts of the repository as follows:
 
@@ -388,7 +397,7 @@ Different keys are used to encrypt different parts of the repository as follows:
 	containing two files.
 
 Metadata Keys
-:   At the high-level, bupstash repositories contain any number of _items_.
+:   At the high-level, Bupstash repositories contain any number of _items_.
     Metadata stores information about such an item. It contains a number
     of tags, the date of backup creation and the addresses and sizes of the
     associated index data (if any) and the associated data (always present).
@@ -411,7 +420,7 @@ Data Keys
 
 The use of multiple keys for the different repository contents seems sensible.
 It allows sub-keys to be created to e.g. only access the backup metadata without
-having to be able to decipher the index and data contents. The use of separate
+having to be able to decrypt the index and data contents. The use of separate
 keys for index and data ensures that adversaries cannot attack the system by
 exchanging index and data contents.
 
@@ -453,7 +462,7 @@ computed as follows and from that, the plaintext:
 
 This encryption is used at the level of _chunks_ with the chunks being managed
 by a data and index tree for data and index contents respectively. In order
-to check that the content addressible storage is indeed addressed correctly,
+to check that the content addressable storage is indeed addressed correctly,
 the addresses inside the trees are checked as follows using a Hash Key (HK):
 
 	HK               := BLAKE3(Key Part 1 || Key Part 2)
@@ -513,7 +522,7 @@ which shows the implementation maxbupst at a high-level glance.
 
 ## Bupstash's Index Structures
 
-To assiciate file contents and metadata, bupstash does the following:
+To associate file contents and metadata, bupstash does the following:
 
  * It creates two separate HTrees and iterates over both of them independently:
    One for metadata and one for the actual file contents.
@@ -522,7 +531,7 @@ To assiciate file contents and metadata, bupstash does the following:
  * For each record, it reads out the _size_ of the respective item.
  * If _size_ is nonzero, it reads _size_ bytes from the data tree and produces
    them as output.
- * Now the dasta tree cursor points to data from the next entry with data such
+ * Now the data tree cursor points to data from the next entry with data such
    that the restore can continue by going to the next metadata item.
  * Additional data fields allow for restoration of a subset of files. I did not
    check this in more detail because maxbupst only implements the “full” restore
@@ -542,7 +551,7 @@ HTree can be traversed without being decrypted. The actual (encrypted) data
 is contained in the leaf nodes whereas the other nodes contain unencrypted
 metadata about which other tree nodes belong to the same subtree.
 
-Bupstash's storage is “content-addressible”, i.e. the _ID_ of a tree node
+Bupstash's storage is “content-addressable”, i.e. the _ID_ of a tree node
 is actually the BLAKE3 hash over the concatenation of its (file) contents.
 
 As a result, an entire stream can be identified by its ID. Such a tree can
@@ -634,3 +643,9 @@ contained in the maxbupst source tree.
                    ║                                                   ║
                    ╚═══════════════════════════════════════════════════╝
 ~~~
+
+Future Directions
+=================
+
+Currently, only Bupstash v0.10.3 is supported.
+Is intended to add support for a newer version in the future.
