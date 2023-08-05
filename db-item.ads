@@ -22,6 +22,11 @@ package DB.Item is
 	function Init_HTree_Reader_For_Data_Tree(Ctx: in Item) return
 						Tree.HTree_LL.Tree_Reader;
 
+	function Derive_Data_Hash_Key(Ctx: in Item; Key: in DB.Key.Key)
+						return Bupstash_Types.Hash_Key;
+	function Derive_Index_Hash_Key(Ctx: in Item; Key: in DB.Key.Key)
+						return Bupstash_Types.Hash_Key;
+
 private
 
 	package String_Ordered_Maps is new Ada.Containers.
@@ -99,5 +104,9 @@ private
 
 	function Init_HTree_Reader_For_Meta(M: in H_Tree_Metadata) return
 						Tree.HTree_LL.Tree_Reader;
+
+	function Derive_Hash_Key(Part_1, Part_2:
+					in Bupstash_Types.Partial_Hash_Key)
+					return Bupstash_Types.Hash_Key;
 
 end DB.Item;

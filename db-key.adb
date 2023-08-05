@@ -1,7 +1,6 @@
 with Ada.Assertions;
 with Ada.Text_IO;
 
-with Blake3;
 with Serde;
 
 with Bupstash_Types;
@@ -115,22 +114,5 @@ package body DB.Key is
 	begin
 		Ada.Text_IO.Put_Line("key_id: " & To_Hex(String(K.ID)));
 	end Print;
-
-	function Derive_Index_Hash_Key(K: in Key)
-					return Bupstash_Types.Hash_Key is
-		(Derive_Hash_Key(K.Idx_Hash_Key_Part_1, K.Idx_Hash_Key_Part_2));
-
-	function Derive_Hash_Key(Part_1, Part_2: in Partial_Hash_Key)
-							return Hash_Key is
-		Ctx: Blake3.Hasher := Blake3.Init;
-	begin
-		Ctx.Update(Part_1);
-		Ctx.Update(Part_2);
-		return Ctx.Final;
-	end Derive_Hash_Key;
-
-	function Derive_Data_Hash_Key(K: in Key) return Bupstash_Types.Hash_Key
-				is (Derive_Hash_Key(K.Data_Hash_Key_Part_1,
-						K.Data_Hash_Key_Part_2));
 
 end DB.Key;

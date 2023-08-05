@@ -1,6 +1,9 @@
+with Ada.Exceptions;
+
 with Blake3;
 with Crypto.ZSodium;
 with Compression;
+with Bupstash_Types;
 
 package body Crypto.Decryption is
 
@@ -12,25 +15,33 @@ package body Crypto.Decryption is
 	function Decrypt_Data(Ctx: in out Decryption_Context;
 						CT: in Stream_Element_Array)
 						return Stream_Element_Array is
-		PK_Slice_In: constant Stream_Element_Array := CT(CT'Last -
-			Stream_Element_Offset(Bupstash_Types.Box_Publickeybytes)
-			+ 1 .. CT'Last);
-		PK_Slice_Conv: Bupstash_Types.PK;
-		for PK_Slice_Conv'Address use PK_Slice_In'Address;
 	begin
-		if Ctx.Ephemeral_PK /= PK_Slice_Conv then
-			Ctx.Ephemeral_PK := PK_Slice_Conv;
-			Ctx.Ephemeral_BK := Box_Compute_Key(Ctx.Ephemeral_PK,
-							Ctx.SK, Ctx.PSK);
-		end if;
-		return Compression.Decompress(Box_Decrypt(CT(CT'First
-			.. CT'Last - Stream_Element_Offset(
-			Bupstash_Types.Box_Publickeybytes)), Ctx.Ephemeral_BK));
+		declare
+			PK_Slice_In: constant Stream_Element_Array := CT(
+				CT'Last - Stream_Element_Offset(
+				Bupstash_Types.Box_Publickeybytes) + 1 ..
+				CT'Last);
+			PK_Slice_Conv: Bupstash_Types.PK;
+			for PK_Slice_Conv'Address use PK_Slice_In'Address;
+		begin
+			if Ctx.Ephemeral_PK /= PK_Slice_Conv then
+				Ctx.Ephemeral_PK := PK_Slice_Conv;
+				Ctx.Ephemeral_BK := Box_Compute_Key(
+					Ctx.Ephemeral_PK, Ctx.SK, Ctx.PSK);
+			end if;
+			return Compression.Decompress(Box_Decrypt(CT(CT'First
+				.. CT'Last - Stream_Element_Offset(
+				Bupstash_Types.Box_Publickeybytes)),
+				Ctx.Ephemeral_BK));
+		end;
+	exception
+		when Ex: others =>
+			raise Bupstash_Types.Corrupt_Or_Tampered_Data_Error with
+				"Decryption error 'corrupted' - " &
+				Ada.Exceptions.Exception_Name(Ex) & " - " &
+				Ada.Exceptions.Exception_message(Ex);
 	end Decrypt_Data;
 
-	-- "TODO REVIEWME" in Bupstash: NB: This uses a keyed hash and not the
-	-- dedicated key derivation function. IMHO that could be better in some
-	-- regards.
 	function Box_Compute_Key(PK: in Bupstash_Types.PK;
 			SK: in Bupstash_Types.SK; PSK: in Bupstash_Types.PSK)
 			return Bupstash_Types.Box_Key is

@@ -5,6 +5,7 @@ with Ada.Assertions;
 use  Ada.Assertions;
 with Ada.Directories;
 
+with Blake3;
 with Serde;
 with Bupstash_Types;
 use  Bupstash_Types;
@@ -234,5 +235,23 @@ package body DB.Item is
 	function Init_HTree_Reader_For_Data_Tree(Ctx: in Item) return
 						Tree.HTree_LL.Tree_Reader is
 			(Init_HTree_Reader_For_Meta(Ctx.Plain.Data_Tree));
+
+	function Derive_Data_Hash_Key(Ctx: in Item; Key: in DB.Key.Key) return
+		Hash_Key is (Derive_Hash_Key(Key.Get_Data_Hash_Key_Part_1, 
+					Ctx.Decrypted.Data_Hash_Key_Part_2));
+
+	function Derive_Hash_Key(Part_1, Part_2: in Partial_Hash_Key)
+							return Hash_Key is
+		Ctx: Blake3.Hasher := Blake3.Init;
+	begin
+		Ctx.Update(Part_1);
+		Ctx.Update(Part_2);
+		return Ctx.Final;
+	end Derive_Hash_Key;
+
+
+	function Derive_Index_Hash_Key(Ctx: in Item; Key: in DB.Key.Key) return
+		Hash_Key is (Derive_Hash_Key(Key.Get_Index_Hash_Key_Part_1, 
+					Ctx.Decrypted.Index_Hash_Key_Part_2));
 
 end DB.Item;

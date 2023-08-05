@@ -14,11 +14,12 @@ package DB.Key is
 	function Get_Data_SK     (K: in Key) return Bupstash_Types.SK;
 	function Get_Data_PSK    (K: in Key) return Bupstash_Types.PSK;
 
-	procedure Print(K: in Key);
-	function Derive_Index_Hash_Key(K: in Key)
-					return Bupstash_Types.Hash_Key;
-	function Derive_Data_Hash_Key(K: in Key) return Bupstash_Types.Hash_Key;
+	function Get_Data_Hash_Key_Part_1(K: in Key)
+					return Bupstash_Types.Partial_Hash_Key;
+	function Get_Index_Hash_Key_Part_1(K: in Key)
+					return Bupstash_Types.Partial_Hash_Key;
 
+	procedure Print(K: in Key);
 
 private
 
@@ -100,8 +101,11 @@ private
 	function Get_Data_PSK(K: in Key)
 				return Bupstash_Types.PSK is (K.Data_PSK);
 
-	function Derive_Hash_Key(Part_1, Part_2:
-					in Bupstash_Types.Partial_Hash_Key)
-					return Bupstash_Types.Hash_Key;
+	function Get_Data_Hash_Key_Part_1(K: in Key)
+				return Bupstash_Types.Partial_Hash_Key is
+				(K.Data_Hash_Key_Part_1);
+	function Get_Index_Hash_Key_Part_1(K: in Key)
+				return Bupstash_Types.Partial_Hash_Key is
+				(K.Idx_Hash_Key_Part_1);
 
 end DB.Key;

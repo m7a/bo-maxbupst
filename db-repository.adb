@@ -75,12 +75,12 @@ package body DB.Repository is
 				Crypto.Decryption.New_Decryption_Context(
 				Repo.Key.Get_Idx_SK, Repo.Key.Get_Idx_PSK);
 			Index_HK: constant Bupstash_Types.Hash_Key :=
-						Repo.Key.Derive_Index_Hash_Key;
+					I.Derive_Index_Hash_Key(Repo.Key);
 			Data_DCTX: Crypto.Decryption.Decryption_Context :=
 				Crypto.Decryption.New_Decryption_Context(
 				Repo.Key.Get_Data_SK, Repo.Key.Get_Data_PSK);
 			Data_HK: constant Bupstash_Types.Hash_Key :=
-						Repo.Key.Derive_Data_Hash_Key;
+					I.Derive_Data_Hash_Key(Repo.Key);
 		begin
 			Tree.Restorer.Restore_With_Index(IT, DT,
 				Index_DCTX, Index_HK, Data_DCTX, Data_HK,
@@ -94,7 +94,7 @@ package body DB.Repository is
 				Crypto.Decryption.New_Decryption_Context(
 				Repo.Key.Get_Data_SK, Repo.Key.Get_Data_PSK);
 			Data_HK: constant Bupstash_Types.Hash_Key :=
-						Repo.Key.Derive_Data_Hash_Key;
+					I.Derive_Data_Hash_Key(Repo.Key);
 		begin
 			Tree.Restorer.Restore_Without_Index(DT, Data_DCTX,
 						Data_HK, Data_Directory);
@@ -102,7 +102,6 @@ package body DB.Repository is
 	begin
 		for I of Repo.It loop
 			if I.Has_XID(Item_XID) then
-				-- indentation exceeded
 				if I.Has_Index_Tree then
 					Restore_With_Index(I);
 				else
