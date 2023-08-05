@@ -8,6 +8,7 @@
 <!-- currently restricted due to dependencies being on amd64 only -->
 <property name="mdpc.arch"      value="amd64"/>
 <property name="mdpc.descrs"    value="Ma_Sys.ma Bupstash Extractor"/>
+<property name="mdpc.bdep"      value="liblz4-ada-dev, libblake3-ada-dev, libtar-ada-dev"/>
 <property name="mdpc.depends"   value="$${shlibs:Depends}, liblz4-ada-dev, libblake3-ada-dev, libtar-ada-dev"/>
 <property name="mdpc.descrl">
  The Ma_Sys.ma Bupstash Extractor (command `maxbupst`) is an alternative tool
