@@ -5,12 +5,6 @@
 scriptroot="$(cd "$(dirname "$0")" && pwd)"
 MDVL_CI_PHOENIX_ROOT="${MDVL_CI_PHOENIX_ROOT:-$scriptroot/..}"
 
-if [ -f "$scriptroot/.env" ]; then
-	. "$scriptroot/.env"
-	unset BUPSTASH_REPOSITORY
-	unset BUPSTASH_KEY
-fi
-
 MAXBT_LOCAL_TMP="${MAXBT_LOCAL_TMP:-/var/tmp/maxbt_local}"
 MAXBT_UUT="${MAXBT_UUT:-$scriptroot/maxbupst}"
 
@@ -28,8 +22,10 @@ rm -rf "$MAXBT_LOCAL_TMP/bats/bupstash.git"
 
 # edit the commands to make use of maxbupst over the real bupstash
 replstr="\"$MAXBT_UUT\" -g -k "'"$SCRATCH/bupstash-test-primary.key"'" -i "
-sed "s#bupstash get id=#$replstr#g" < "$MAXBT_LOCAL_TMP/bats/cli-tests.bats" \
-				> "$MAXBT_LOCAL_TMP/bats/cli-tests-edit.bats"
+sed -e "s#bupstash get id=#$replstr#g" \
+	-e 's#^  \(rm -rf "\$SCRATCH"\)$#  [ -n "$MAXBT_INTERRUPT" ] || \1#g' \
+	< "$MAXBT_LOCAL_TMP/bats/cli-tests.bats" \
+	> "$MAXBT_LOCAL_TMP/bats/cli-tests-edit.bats"
 sed "s#bupstash get -q id=#$replstr#g" \
 				< "$MAXBT_LOCAL_TMP/bats/parallel-thrash.sh" \
 				> "$MAXBT_LOCAL_TMP/bats/parallel-thrash.sh.new"
@@ -40,4 +36,8 @@ cd "$MAXBT_LOCAL_TMP/bats"
 ulimit -s unlimited
 
 # run only a subset of the tests where bupstash get is involved
-exec bats --filter "^(simple put|put name|random data|highly crompre|key mism|corruption|concurrent|simple search|rm and|query sync|send directory|stat cache|key command|long path|long link target|directory exclusions|checkpoint|rm from|concurrent dir|list and rm|multi dir|hard link short|long hard link|hard link to|parallel thrash)" cli-tests-edit.bats
+if [ "${MAXBT_INTERRUPT:-unset}" = unset ]; then
+	exec bats --filter "^(simple put|put name|random data|highly crompre|key mism|corruption|concurrent|simple search|rm and|query sync|send directory|stat cache|key command|long path|long link target|directory exclusions|checkpoint|rm from|concurrent dir|list and rm|multi dir|hard link short|long hard link|hard link to|parallel thrash)" cli-tests-edit.bats "$@"
+else
+	exec bats --filter "^(simple put\/get put key)$" cli-tests-edit.bats -x --no-tempdir-cleanup "$@"
+fi

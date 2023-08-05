@@ -42,7 +42,7 @@ test_extract_8m() { # TEST CASE
 	speed_mibs="$(echo 8 / $time_sec | bc -l)"
 	echo "  speed=$speed_mibs MiB/s"
 	if [ "$found_hash" = "$expect_hash" ]; then
-		return 0;
+		return 0
 	fi
 	echo "  hash mismatch. found=<$found_hash> expected=<$expect_hash>"
 	return 1
@@ -54,6 +54,18 @@ test_extract_repo_cmp_ref() { # TEST CASE
 				> "$tmp/test_extract_repo_cmp_ref_uut.tar"
 	diffoscope "$tmp/test_extract_repo_cmp_ref_ref.tar" \
 					"$tmp/test_extract_repo_cmp_ref_uut.tar"
+}
+
+test_get_xes_from_simplegetput() { # TEST CASE
+	export BUPSTASH_REPOSITORY="$BUPSTASH_REPOSITORY/../simplegetput-0.10.3"
+	export BUPSTASH_KEY="$BUPSTASH_REPOSITORY/bupstash-test-primary.key"
+	val="$("$uut" -g -i 71a32f3f77f2db9817eb9f56c60e9637 || echo ERROR$?)"
+	cmp=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+	if [ "$val" = "$cmp" ]; then
+	return 0
+	fi
+	echo "  output data mismatch. found=<$val> expected=<$cmp>"
+	return 1
 }
 
 # ------------------------------------------------------------------------------
