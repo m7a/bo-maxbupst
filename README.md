@@ -479,8 +479,8 @@ shorthand notation for _Key Part 1_ and _Key Part 2_ of the Hash Key:
 	+-------+----------------------+----+    +----+-----+------+------+
 	| Nonce | Cryptobox Ciphertext | PK |    | SK | PSK | HKP1 | HKP2 |
 	+-------+----------------------+----+    +----+-----+------+------+
-            |              |             |          |    |    |          |
-            |              |             v          v    |    +- concat -+
+	    |              |             |          |    |    |          |
+	    |              |             v          v    |    +- concat -+
 	    |              |           +--------------+  |         |
 	    |              |           |  cryptobox-  |  |         v
 	    |              |           |   beforenm   |  |  +--------------+

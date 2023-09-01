@@ -25,9 +25,7 @@ maxbupst /usr/bin
 </property>
 
 <!-- CI INTEGRATION -->
-<target name="package_triggered" depends="package">
-	<property name="masysma.ci.trigger" value="newver"/>
-</target>
+<target name="autoci" depends="autopackage"/>
 
 <target name="masysma_internal_build_ada">
 	<exec executable="gnatmake" failonerror="true">

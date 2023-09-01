@@ -62,7 +62,7 @@ test_get_xes_from_simplegetput() { # TEST CASE
 	val="$("$uut" -g -i 71a32f3f77f2db9817eb9f56c60e9637 || echo ERROR$?)"
 	cmp=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 	if [ "$val" = "$cmp" ]; then
-	return 0
+		return 0
 	fi
 	echo "  output data mismatch. found=<$val> expected=<$cmp>"
 	return 1
